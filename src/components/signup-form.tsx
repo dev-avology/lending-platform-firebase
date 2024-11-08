@@ -1,13 +1,12 @@
 'use client'
 
 import { useState } from 'react';
-import { sendEmailVerification, signOut } from 'firebase/auth';
+import { sendEmailVerification } from 'firebase/auth';
 import { auth, db, logout, register, saveUserData, signInWithGoogle } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { GoogleAuthButton } from './ui/google-auth-button';
 import Link from 'next/link';
 import { Logo } from './icons/logo';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -34,6 +33,7 @@ export function SignupForm() {
     businessName: string;
     businessAddress: string;
     industry: string;
+    photoURL:string;
   };
 
   const [formData, setFormData] = useState<FormData>({
@@ -48,7 +48,8 @@ export function SignupForm() {
     ssn: '',
     businessName: '',
     businessAddress: '',
-    industry: ''
+    industry: '',
+    photoURL: '',
   });
 
   const steps = [
@@ -112,7 +113,7 @@ export function SignupForm() {
             ...userData
           })
           setStep(1) // Move to Account Details step
-
+          setType('google')
         } else {
             console.log("Existing user, redirecting to login")
             // Existing user, sign out and redirect to login
@@ -138,7 +139,7 @@ export function SignupForm() {
     try {
       let user = auth.currentUser;
 
-      if (!user) {
+      if (!user && formData.password) {
         const userCredential = await register(formData.email, formData.password);
         user = userCredential.user;
         await sendEmailVerification(user);
@@ -147,14 +148,14 @@ export function SignupForm() {
       const userData = {
         ...formData,
         registrationComplete: true,
-        photoURL: formData.photoURL || `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="#808080"/><text x="50" y="50" font-family="Arial" font-size="50" fill="white" text-anchor="middle" dy=".3em">N</text></svg>`)}`
+        photoURL: formData?.photoURL || `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="#808080"/><text x="50" y="50" font-family="Arial" font-size="50" fill="white" text-anchor="middle" dy=".3em">N</text></svg>`)}`
       };
 
       delete userData.password;
       delete userData.confirmPassword;
-
-      await saveUserData(user.uid, userData);
       
+      if(user){
+        await saveUserData(user.uid, userData);
       if (!user.emailVerified) {
         // Inform the user about the verification email
         await logout()
@@ -164,6 +165,7 @@ export function SignupForm() {
         // If email is already verified (Google sign-up), go to dashboard
         router.push("/dashboard");
       }
+    }
 
 
     } catch {
@@ -172,14 +174,15 @@ export function SignupForm() {
   };
 
   const isStepValid = (stepIndex: number) => {
-    const validations = {
-      0: formData.firstName && formData.lastName && formData.email && formData.phoneNumber,
-      1: formData.username && (type === 'google' || (formData.password && formData.password === formData.confirmPassword)),
-      2: formData.dateOfBirth && formData.ssn,
-      3: formData.businessName && formData.businessAddress && formData.industry
+    const validations: { [key: number]: boolean | undefined } = {
+      0: !!(formData.firstName && formData.lastName && formData.email && formData.phoneNumber),
+      1: !!(formData.username && (type === 'google' || (formData.password && formData.password === formData.confirmPassword))),
+      2: !!(formData.dateOfBirth && formData.ssn),
+      3: !!(formData.businessName && formData.businessAddress && formData.industry),
     };
     return validations[stepIndex];
   };
+  
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

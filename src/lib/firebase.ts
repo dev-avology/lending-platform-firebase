@@ -6,10 +6,8 @@ import {
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
   sendPasswordResetEmail, 
-  sendEmailVerification,
   signOut,
   UserCredential,
-  User 
 } from "firebase/auth";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
 
@@ -35,7 +33,7 @@ export const register = async (email: string, password: string): Promise<UserCre
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
   
   // Send email verification
-  await sendEmailVerification(userCredential.user);
+ // await sendEmailVerification(userCredential.user);
   return userCredential;
 };
 
@@ -48,8 +46,6 @@ export const logout = (): Promise<void> => {
 };
 
 // Google Sign-In function
-
-
 export const signInWithGoogle = (): Promise<UserCredential> => {
   return signInWithPopup(auth, googleProvider);
 };

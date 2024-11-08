@@ -1,13 +1,13 @@
 import Image from 'next/image'
 
-export function Logo() {
+export function Logo({ width = 150, height = 150 }) {
   return (
     <Image
       src="/asset/NC_logo.png"
       alt="Company Logo"
-      width={150}
-      height={150}
-      className="h-150 w-150"
+      width={width}
+      height={height}
+      className={`h-${height} w-${width}`}
     />
   )
 }
