@@ -1,5 +1,7 @@
 'use client';
-import React, { useState } from 'react'
+import React, {useEffect } from 'react'
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 import { FileText, Clock, CheckCircle, XCircle, AlertTriangle, ChevronRight, ChevronDown, ChevronUp, FileCheck, Upload } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,6 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { UploadDocumentsModal } from '@/components/UploadDocumentsModal';
+import Link from 'next/link';
 
 export default function LoanStatusPage() {
   const [isOpen, setIsOpen] = React.useState(false)
@@ -19,6 +22,23 @@ export default function LoanStatusPage() {
   const [selectedOffer, setSelectedOffer] = React.useState(null)
   const [isOfferDetailsOpen, setIsOfferDetailsOpen] = React.useState(false)
   const [isStipUploadOpen, setIsStipUploadOpen] = React.useState(false)
+
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    return null;
+  }
 
   const currentOffers = [
     { 
@@ -348,6 +368,14 @@ export default function LoanStatusPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+
+      <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-3">
+
+            <Link href="/dashboard" className="flex items-center text-gray-900 hover:bg-gray-50 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+                Back to Dashboard
+              </Link>
+      </div>
     </div>
   )
 }

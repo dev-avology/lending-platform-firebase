@@ -35,6 +35,16 @@ export default function DashboardLayout({
     }
   };
 
+  const handleSetting = async () => {
+      router.push('/setting'); // Redirect to login page after sign-out
+  };
+  const handleProfile = async () => {
+    router.push('/profile'); // Redirect to login page after sign-out
+ };
+const handleLoanStatus = async () => {
+    router.push('/loan-status'); // Redirect to login page after sign-out
+};
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header */}
@@ -82,10 +92,9 @@ export default function DashboardLayout({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleProfile}>Your Profile</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLoanStatus}>Loan Status</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSetting}>Settings</DropdownMenuItem>
                 <DropdownMenuItem onClick={handleSignOut}>Sign out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
