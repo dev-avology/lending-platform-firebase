@@ -1,44 +1,30 @@
-'use client';
-import React, {useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
-import { FileText, Clock, CheckCircle, XCircle, AlertTriangle, ChevronRight, ChevronDown, ChevronUp, FileCheck, Upload } from 'lucide-react'
+'use client'
+import React, { useEffect, useState } from 'react'
+import { FileText, Clock, CheckCircle, ChevronRight, FileCheck,} from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { UploadDocumentsModal } from './UploadDocumentsModal'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { UploadDocumentsModal } from '@/components/UploadDocumentsModal';
-import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link'
 
-export default function LoanStatusPage() {
+export default function LoanStatus() {
+
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
   const [isOpen, setIsOpen] = React.useState(false)
   const [isUploadModalOpen, setIsUploadModalOpen] = React.useState(false)
   const [selectedOffer, setSelectedOffer] = React.useState(null)
   const [isOfferDetailsOpen, setIsOfferDetailsOpen] = React.useState(false)
   const [isStipUploadOpen, setIsStipUploadOpen] = React.useState(false)
-
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [user, loading, router]);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!user) {
-    return null;
-  }
 
   const currentOffers = [
     { 
@@ -100,17 +86,31 @@ export default function LoanStatusPage() {
     },
   ]
 
-  const handleAcceptOffer = (offer: React.SetStateAction<null>) => {
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  const handleAcceptOffer = (offer) => {
     setSelectedOffer(offer)
     setIsOfferDetailsOpen(true)
   }
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status) => {
     switch (status) {
       case "Action Needed":
-        return <Badge variant="default" className='bg-orange-500'>Action Needed</Badge>
+        return <Badge variant="warning">Action Needed</Badge>
       case "Funding":
-        return <Badge variant="default" className='bg-green-500'>Funding</Badge>
+        return <Badge variant="success">Funding</Badge>
       case "Declined":
         return <Badge variant="destructive">Declined</Badge>
       default:
@@ -118,7 +118,7 @@ export default function LoanStatusPage() {
     }
   }
 
-  const handleUploadStip = (offer: React.SetStateAction<null>) => {
+  const handleUploadStip = (offer) => {
     setSelectedOffer(offer)
     setIsStipUploadOpen(true)
   }
@@ -133,7 +133,7 @@ export default function LoanStatusPage() {
         <div className="px-4 py-6 sm:px-0">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">Loan Application Status</h1>
 
-          <Card className="mb-6 pb-6">
+          <Card className="mb-6">
             <CardHeader>
               <CardTitle>Current Application</CardTitle>
               <CardDescription>Status of your most recent loan application</CardDescription>
@@ -300,6 +300,14 @@ export default function LoanStatusPage() {
             </CardContent>
           </Card>
         </div>
+
+        <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-3">
+
+          <Link href="/dashboard" className="flex items-center text-gray-900 hover:bg-gray-50 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+            Back to Dashboard
+          </Link>
+        </div>
+
       </main>
 
       <UploadDocumentsModal 
@@ -327,7 +335,7 @@ export default function LoanStatusPage() {
                 <div className="mt-4">
                   <h4 className="font-semibold mb-2">Additional Documents Required:</h4>
                   <ul className="list-disc pl-5">
-                    {selectedOffer.stips.map((stip: { name: string | number | bigint | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<React.AwaitedReactNode> | null | undefined; status: string | number | bigint | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | Promise<React.AwaitedReactNode> | null | undefined }, index: React.Key | null | undefined) => (
+                    {selectedOffer.stips.map((stip, index) => (
                       <li key={index} className="mb-2">
                         {stip.name} - {stip.status}
                         {stip.status === "Pending" && (
@@ -368,14 +376,6 @@ export default function LoanStatusPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-
-      <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-3">
-
-            <Link href="/dashboard" className="flex items-center text-gray-900 hover:bg-gray-50 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-                Back to Dashboard
-              </Link>
-      </div>
     </div>
   )
 }
