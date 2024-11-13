@@ -38,7 +38,7 @@ export default function Profile() {
         {/* Navigation bar code (same as in Dashboard.tsx) */}
       </nav>
 
-      <main className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">Profile</h1>
 
@@ -46,7 +46,7 @@ export default function Profile() {
             <CardHeader>
               <div className="flex items-center space-x-4">
                 <Avatar className="w-20 h-20">
-                  <AvatarImage src={avatar} alt="Profile picture" />
+                  <AvatarImage src={user.photoURL??avatar} alt="Profile picture" />
                   <AvatarFallback>JD</AvatarFallback>
                 </Avatar>
                 <div>
@@ -56,34 +56,34 @@ export default function Profile() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div className="flex items-center space-x-2">
                   <User className="h-5 w-5 text-gray-500" />
-                  <span>John Doe</span>
+                  <span>{user.displayName}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Mail className="h-5 w-5 text-gray-500" />
-                  <span>john.doe@example.com</span>
+                  <span>{user.email}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Phone className="h-5 w-5 text-gray-500" />
-                  <span>+1 (555) 123-4567</span>
-                </div>
+                  <span>{user.phoneNumber || 'Not Provided'}</span>
+                  </div>
                 <div className="flex items-center space-x-2">
                   <Building className="h-5 w-5 text-gray-500" />
-                  <span>Acme Inc.</span>
+                  <span>{user.company || 'Not provided'}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <MapPin className="h-5 w-5 text-gray-500" />
-                  <span>San Francisco, CA</span>
+                  <span>{user.location || 'Not provided'}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Briefcase className="h-5 w-5 text-gray-500" />
-                  <span>Technology</span>
+                  <span>{user.industry || 'Not provided'}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Calendar className="h-5 w-5 text-gray-500" />
-                  <span>Member since Jan 2023</span>
+                  <span>Member since {user.createdAt ? new Date(user.createdAt.toDate()).toLocaleDateString() : 'N/A'}</span>
                 </div>
               </div>
             </CardContent>
