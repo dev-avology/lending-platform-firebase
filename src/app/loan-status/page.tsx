@@ -14,12 +14,17 @@ import { Label } from "@/components/ui/label"
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link'
+import { auth, db } from '@/lib/firebase'
+import { collection, doc, getDoc, getDocs, limit, orderBy, query, where } from 'firebase/firestore'
 
 export default function LoanStatus() {
 
   const { user, loading } = useAuth();
   const router = useRouter();
 
+  const [currentApplication, setCurrentApplication] = useState(null)
+  const [applicationHistory, setApplicationHistory] = useState([])
+  
   const [isOpen, setIsOpen] = React.useState(false)
   const [isUploadModalOpen, setIsUploadModalOpen] = React.useState(false)
   const [selectedOffer, setSelectedOffer] = React.useState(null)
@@ -90,6 +95,44 @@ export default function LoanStatus() {
     if (!loading && !user) {
       router.push('/login');
     }
+    
+    const fetchApplicationData = async () => {
+      const user = auth.currentUser
+
+      if (user) {
+        // Fetch the most recent application
+        const applicationsRef = collection(db, 'users', user.uid, 'applications');
+
+
+        const inProgressQuery = query(applicationsRef, where('status', '==', 'In Progress'));
+
+        const querySnapshot = await getDocs(inProgressQuery);
+
+        console.log(querySnapshot);
+
+        if (!querySnapshot.empty) {
+          const applicationDoc = querySnapshot.docs[0];
+          setCurrentApplication({ id: applicationDoc.id, ...applicationDoc.data() });
+          console.log('In-progress application found:', currentApplication);
+        }
+       
+        // Fetch application history
+        const historyRef = collection(db, 'users', user.uid, 'applications')
+        const historyQuery = query(historyRef, orderBy('submissionDate', 'desc'), limit(10))
+        const historySnap = await getDocs(historyQuery)
+        
+        const history = historySnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        
+
+        setApplicationHistory(history);
+        console.log('ddddddddd',applicationHistory);
+      }
+    }
+    if(user){
+      fetchApplicationData()
+    }
+
   }, [user, loading, router]);
 
   if (loading) {
@@ -133,7 +176,7 @@ export default function LoanStatus() {
         <div className="px-4 py-6 sm:px-0">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">Loan Application Status</h1>
 
-          <Card className="mb-6">
+          {currentApplication &&  <Card className="mb-6">
             <CardHeader>
               <CardTitle>Current Application</CardTitle>
               <CardDescription>Status of your most recent loan application</CardDescription>
@@ -142,7 +185,7 @@ export default function LoanStatus() {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-lg font-semibold">Business Expansion Loan</h3>
-                  <p className="text-sm text-gray-500">Application #12345</p>
+                  <p className="text-sm text-gray-500">Application #{currentApplication.id}</p>
                 </div>
                 <Badge variant="secondary">In Progress</Badge>
               </div>
@@ -169,7 +212,7 @@ export default function LoanStatus() {
                 <ChevronRight className="h-4 w-4 ml-2" />
               </Button>
             </CardFooter>
-          </Card>
+          </Card>}
 
           <Card className="mb-6">
             <CardHeader>
@@ -241,7 +284,7 @@ export default function LoanStatus() {
                   </TableBody>
                 </Table>
               ) : (
-                <p>No offers available yet. We'll notify you when lenders respond to your application.</p>
+                <p>${`No offers available yet. We'll notify you when lenders respond to your application.`}</p>
               )}
             </CardContent>
           </Card>
@@ -252,14 +295,22 @@ export default function LoanStatus() {
               <CardDescription>Your past loan applications and their outcomes</CardDescription>
             </CardHeader>
             <CardContent>
+            <div className="flex justify-between w-full">
+            <span>Application ID</span>
+            <span>Legal Name</span>
+            <span>Submission date</span>
+            <span>Amount</span>
+            <span>Status</span>
+            </div>  
               <Accordion type="single" collapsible className="w-full">
-                {pastApplications.map((application, index) => (
+                {applicationHistory.map((application,index) => (
                   <AccordionItem value={`item-${index}`} key={index}>
                     <AccordionTrigger>
                       <div className="flex justify-between w-full">
-                        <span>{application.type}</span>
-                        <span>{application.date}</span>
-                        <span>${application.amount.toLocaleString()}</span>
+                      <span>{application.id}</span>
+                      <span>{application.legalName}</span>
+                      <span>{application.submissionDate?.toDate().toLocaleDateString()}</span>
+                        <span>${application.loanAmount.toLocaleString()}</span>
                         <Badge variant={application.status === "Approved" ? "success" : "destructive"}>
                           {application.status}
                         </Badge>
@@ -268,30 +319,7 @@ export default function LoanStatus() {
                     <AccordionContent>
                       <div className="pt-4">
                         <h4 className="font-semibold mb-2">Lender Offers</h4>
-                        {application.offers && application.offers.length > 0 ? (
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Lender</TableHead>
-                                <TableHead>Amount</TableHead>
-                                <TableHead>Interest Rate</TableHead>
-                                <TableHead>Term</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {application.offers.map((offer, offerIndex) => (
-                                <TableRow key={offerIndex}>
-                                  <TableCell>{offer.lender}</TableCell>
-                                  <TableCell>${offer.amount.toLocaleString()}</TableCell>
-                                  <TableCell>{offer.rate}</TableCell>
-                                  <TableCell>{offer.term}</TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        ) : (
                           <p>No offers were received for this application.</p>
-                        )}
                       </div>
                     </AccordionContent>
                   </AccordionItem>

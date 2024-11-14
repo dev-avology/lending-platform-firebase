@@ -9,7 +9,7 @@ import {
   signOut,
   UserCredential,
 } from "firebase/auth";
-import { getFirestore, doc, setDoc, collection, addDoc, query, orderBy, limit, getDocs, Timestamp } from "firebase/firestore";
+import { getFirestore, doc, setDoc, collection, addDoc, query, orderBy, limit, getDocs, Timestamp, getDoc, where } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -78,6 +78,21 @@ export const saveUserData = async (userId: string, formData: FormData) => {
   }
 };
 
+// Function to save user data in Firestore
+export const getUserData = async (user: any) => {
+  try {
+    if (!user) {
+      throw new Error("No authenticated user found");
+    }
+    const userDoc = await getDoc(doc(db, 'users', user.uid))
+
+    return userDoc;
+  } catch (error) {
+    console.error('Error saving user data:', error);
+    return null;
+  }
+};
+
 
 // Function to save a loan application
 export const saveLoanApplication = async (data: any) => {
@@ -88,6 +103,17 @@ export const saveLoanApplication = async (data: any) => {
 
   try {
     const applicationsRef = collection(db, 'users', user.uid, 'applications');
+
+
+    const inProgressQuery = query(applicationsRef, where('status', '==', 'In Progress'));
+
+    const querySnapshot = await getDocs(inProgressQuery);
+
+    if (!querySnapshot.empty) {
+      console.log('An application is already in progress. Cannot add another one.');
+      return null;
+    }
+
     const newApplication = {
       ...data,
       userId: user.uid,
@@ -97,9 +123,11 @@ export const saveLoanApplication = async (data: any) => {
     };
 
     const docRef = await addDoc(applicationsRef, newApplication);
+
     console.log('Application submitted successfully with ID:', docRef.id);
 
     return { id: docRef.id };
+
   } catch (error) {
     console.error("Error adding loan application:", error);
     throw error;

@@ -11,11 +11,13 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import Link from 'next/link';
+import { useUser } from '@/contexts/UserContext';
 
 export default function Profile() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [avatar] = useState("/placeholder.svg?height=100&width=100")
+  const { userData } = useUser();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -46,12 +48,12 @@ export default function Profile() {
             <CardHeader>
               <div className="flex items-center space-x-4">
                 <Avatar className="w-20 h-20">
-                  <AvatarImage src={user.photoURL??avatar} alt="Profile picture" />
+                  <AvatarImage src={userData?.photoURL||avatar} alt="Profile picture" />
                   <AvatarFallback>JD</AvatarFallback>
                 </Avatar>
                 <div>
-                  <CardTitle className="text-2xl">John Doe</CardTitle>
-                  <CardDescription>Owner, Acme Inc.</CardDescription>
+                  <CardTitle className="text-2xl">{userData?.firstName} {userData?.lastName} </CardTitle>
+                  <CardDescription>Owner, {userData?.businessName || 'Not provided'}</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -59,31 +61,31 @@ export default function Profile() {
               <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div className="flex items-center space-x-2">
                   <User className="h-5 w-5 text-gray-500" />
-                  <span>{user.displayName}</span>
+                  <span>{userData?.firstName} {userData?.lastName}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Mail className="h-5 w-5 text-gray-500" />
-                  <span>{user.email}</span>
+                  <span>{userData?.email}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Phone className="h-5 w-5 text-gray-500" />
-                  <span>{user.phoneNumber || 'Not Provided'}</span>
+                  <span>{userData?.phoneNumber || 'Not Provided'}</span>
                   </div>
                 <div className="flex items-center space-x-2">
                   <Building className="h-5 w-5 text-gray-500" />
-                  <span>{user.company || 'Not provided'}</span>
+                  <span>{userData?.businessName || 'Not provided'}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <MapPin className="h-5 w-5 text-gray-500" />
-                  <span>{user.location || 'Not provided'}</span>
+                  <span>{userData?.businessAddress || 'Not provided'}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Briefcase className="h-5 w-5 text-gray-500" />
-                  <span>{user.industry || 'Not provided'}</span>
+                  <span>{userData?.industry || 'Not provided'}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Calendar className="h-5 w-5 text-gray-500" />
-                  <span>Member since {user.createdAt ? new Date(user.createdAt.toDate()).toLocaleDateString() : 'N/A'}</span>
+                  <span>Member since {userData?.createdAt ? new Date(userData.createdAt.toDate()).toLocaleDateString() : 'N/A'}</span>
                 </div>
               </div>
             </CardContent>
@@ -99,27 +101,23 @@ export default function Profile() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="fullName">Full Name</Label>
-                    <Input id="fullName" defaultValue="John Doe" />
-                  </div>
+                    <Input id="fullName" defaultValue={`${userData.firstName || ''} ${userData.lastName || ''}`} />
+                    </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" defaultValue="john.doe@example.com" />
+                    <Input id="email" type="email" defaultValue={userData?.email} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone</Label>
-                    <Input id="phone" type="tel" defaultValue="+1 (555) 123-4567" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="company">Company</Label>
-                    <Input id="company" defaultValue="Acme Inc." />
+                    <Input id="phone" type="tel" defaultValue={userData?.phoneNumber} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="location">Location</Label>
-                    <Input id="location" defaultValue="San Francisco, CA" />
+                    <Input id="location" defaultValue={userData?.businessAddress} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="industry">Industry</Label>
-                    <Input id="industry" defaultValue="Technology" />
+                    <Input id="industry" defaultValue={userData?.industry} />
                   </div>
                 </div>
                 <div className="space-y-2">

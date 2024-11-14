@@ -264,9 +264,14 @@ export default function LoanApplication() {
         console.log(validateCurrentStep());
         if (validateCurrentStep()) {
             // Submit form data
-            await saveLoanApplication(formData);
-            router.push('/loan-status');
-            console.log('Form submitted:', formData);
+           const id = await saveLoanApplication(formData);
+
+           if(!id){
+              console.log('An application is already in progress. Cannot add another one.');
+           }else{
+                router.push('/loan-status');
+                console.log('Form submitted:', formData);
+           }
         }
     }
 
