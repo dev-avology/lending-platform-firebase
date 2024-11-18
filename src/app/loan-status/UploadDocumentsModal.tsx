@@ -3,6 +3,7 @@ import { Upload, FileText, CheckCircle } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Progress } from "@/components/ui/progress"
+import { getStorage, ref, uploadBytesResumable } from 'firebase/storage'
 
 interface Document {
   name: string;
@@ -16,8 +17,8 @@ interface UploadDocumentsModalProps {
 
 export function UploadDocumentsModal({ isOpen, onClose }: UploadDocumentsModalProps) {
   const [documents, setDocuments] = React.useState<Document[]>([
-    { name: 'Banking Statements', status: 'uploaded' },
-    { name: 'Tax Returns', status: 'uploaded' },
+    { name: 'Banking Statements ', status: 'pending' },
+    { name: 'Tax Returns', status: 'pending' },
     { name: 'Profit & Loss Statement', status: 'pending' },
     { name: 'Balance Sheet', status: 'pending' },
   ])
@@ -25,21 +26,41 @@ export function UploadDocumentsModal({ isOpen, onClose }: UploadDocumentsModalPr
   const [uploading, setUploading] = React.useState(false)
   const [uploadProgress, setUploadProgress] = React.useState(0)
 
-  const handleFileUpload = (documentName: string) => {
-    setUploading(true)
-    let progress = 0
-    const interval = setInterval(() => {
-      progress += 10
-      setUploadProgress(progress)
-      if (progress >= 100) {
-        clearInterval(interval)
-        setUploading(false)
-        setUploadProgress(0)
-        setDocuments(docs => docs.map(doc => 
-          doc.name === documentName ? { ...doc, status: 'uploaded' } : doc
-        ))
+  const handleFileUpload = async (documentName: string) => {
+    const fileInput = document.createElement('input')
+    fileInput.type = 'file'
+    fileInput.accept = '*/*'
+    fileInput.onchange = async (event) => {
+      const file = (event.target as HTMLInputElement).files?.[0]
+      if (file) {
+        const storage = getStorage()
+        const storageRef = ref(storage, `uploads/${documentName}-${Date.now()}`)
+        const uploadTask = uploadBytesResumable(storageRef, file)
+
+        setUploading(true)
+        uploadTask.on(
+          'state_changed',
+          (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+            setUploadProgress(progress)
+          },
+          (error) => {
+            console.error('Upload failed:', error)
+            setUploading(false)
+          },
+          () => {
+            setUploading(false)
+            setUploadProgress(0)
+            setDocuments((docs) =>
+              docs.map((doc) =>
+                doc.name === documentName ? { ...doc, status: 'uploaded' } : doc
+              )
+            )
+          }
+        )
       }
-    }, 500)
+    }
+    fileInput.click()
   }
 
   return (
@@ -78,7 +99,7 @@ export function UploadDocumentsModal({ isOpen, onClose }: UploadDocumentsModalPr
         {uploading && (
           <div className="mt-4">
             <Progress value={uploadProgress} className="w-full" />
-            <p className="text-sm text-gray-500 mt-2">Uploading... {uploadProgress}%</p>
+            <p className="text-sm text-gray-500 mt-2">Uploading... {uploadProgress.toFixed(0)}%</p>
           </div>
         )}
         <div className="mt-6 flex justify-end">

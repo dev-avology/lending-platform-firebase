@@ -17,6 +17,7 @@ import Link from 'next/link'
 import { auth, db } from '@/lib/firebase'
 import { collection, doc, getDoc, getDocs, limit, orderBy, query, where } from 'firebase/firestore'
 
+
 export default function LoanStatus() {
 
   const { user, loading } = useAuth();
@@ -70,27 +71,6 @@ export default function LoanStatus() {
     },
   ]
 
-  const pastApplications = [
-    {
-      id: "#12344",
-      type: "Equipment Finance",
-      date: "May 1, 2023",
-      amount: 25000,
-      status: "Approved",
-      offers: [
-        { lender: "DEF Bank", amount: 25000, rate: "4.5%", term: "3 years", prepaymentPenalty: "1% for first year", payment: 186, paymentFrequency: "Weekly" },
-      ]
-    },
-    {
-      id: "#12343",
-      type: "Working Capital",
-      date: "Mar 10, 2023",
-      amount: 100000,
-      status: "Declined",
-      offers: []
-    },
-  ]
-
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
@@ -123,9 +103,8 @@ export default function LoanStatus() {
         
         const history = historySnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        
-
         setApplicationHistory(history);
+
         console.log('ddddddddd',applicationHistory);
       }
     }
@@ -143,12 +122,12 @@ export default function LoanStatus() {
     return null;
   }
 
-  const handleAcceptOffer = (offer) => {
+  const handleAcceptOffer = (offer: React.SetStateAction<null>) => {
     setSelectedOffer(offer)
     setIsOfferDetailsOpen(true)
   }
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case "Action Needed":
         return <Badge variant="warning">Action Needed</Badge>
@@ -161,7 +140,7 @@ export default function LoanStatus() {
     }
   }
 
-  const handleUploadStip = (offer) => {
+  const handleUploadStip = (offer: React.SetStateAction<null>) => {
     setSelectedOffer(offer)
     setIsStipUploadOpen(true)
   }
@@ -363,7 +342,7 @@ export default function LoanStatus() {
                 <div className="mt-4">
                   <h4 className="font-semibold mb-2">Additional Documents Required:</h4>
                   <ul className="list-disc pl-5">
-                    {selectedOffer.stips.map((stip, index) => (
+                    {selectedOffer.stips.map((stip: { name: string | number | bigint | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<React.AwaitedReactNode> | null | undefined; status: string | number | bigint | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | Promise<React.AwaitedReactNode> | null | undefined }, index: React.Key | null | undefined) => (
                       <li key={index} className="mb-2">
                         {stip.name} - {stip.status}
                         {stip.status === "Pending" && (
