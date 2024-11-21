@@ -1,13 +1,12 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { FileText, Clock, CheckCircle, ChevronRight, FileCheck,} from 'lucide-react'
+import { FileText, Clock, CheckCircle, ChevronRight, FileCheck, } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { UploadDocumentsModal } from './UploadDocumentsModal'
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -15,7 +14,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link'
 import { auth, db } from '@/lib/firebase'
-import { collection, doc, getDoc, getDocs, limit, orderBy, query, where } from 'firebase/firestore'
+import { collection, getDocs, limit, orderBy, query, where } from 'firebase/firestore'
+import { Document, Application, Offer } from '@/types/user'
+import { getStorage, ref, getDownloadURL } from 'firebase/storage'
 
 
 export default function LoanStatus() {
@@ -23,96 +24,113 @@ export default function LoanStatus() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  const [currentApplication, setCurrentApplication] = useState(null)
-  const [applicationHistory, setApplicationHistory] = useState([])
-  
-  const [isOpen, setIsOpen] = React.useState(false)
-  const [isUploadModalOpen, setIsUploadModalOpen] = React.useState(false)
-  const [selectedOffer, setSelectedOffer] = React.useState(null)
+  const [currentApplication, setCurrentApplication] = useState<Application | null>(null);
+  const [applicationHistory, setApplicationHistory] = useState<Application[]>([]);
+
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false)
+  const [selectedOffer, setSelectedOffer] = React.useState<Offer | null>(null)
   const [isOfferDetailsOpen, setIsOfferDetailsOpen] = React.useState(false)
   const [isStipUploadOpen, setIsStipUploadOpen] = React.useState(false)
 
-  const currentOffers = [
-    { 
-      lender: "ABC Bank", 
-      amount: 45000, 
-      rate: "5.5%", 
-      term: "5 years", 
-      prepaymentPenalty: "2% for first 2 years", 
-      payment: 215, 
+  const [documents, setDocuments] = React.useState<Document[]>([
+    { name: 'Banking Statements ', status: 'pending' },
+    { name: 'Tax Returns', status: 'pending' },
+    { name: 'Profit & Loss Statement', status: 'pending' },
+    { name: 'Balance Sheet', status: 'pending' },
+  ])
+  const [hasPendingDocuments, setHasPendingDocuments] = useState(true);
+  const [currentOffers] = React.useState<Offer[]>([
+    {
+      lender: "ABC Bank",
+      amount: "45000",
+      rate: "5.5%",
+      term: "5 years",
+      prepaymentPenalty: "2% for first 2 years",
+      payment: "215",
       paymentFrequency: "Weekly",
       status: "Action Needed",
       stips: [
-        { name: "Proof of Insurance", status: "Pending" },
-        { name: "Bank Statements (Last 3 months)", status: "Uploaded" },
+        { name: "Proof of Insurance", status: "pending" },
+        { name: "Bank Statements (Last 3 months)", status: "uploaded" },
       ]
     },
-    { 
-      lender: "XYZ Financial", 
-      amount: 50000, 
-      rate: "6%", 
-      term: "7 years", 
-      prepaymentPenalty: "None", 
-      payment: 180, 
+    {
+      lender: "XYZ Financial",
+      amount: "50000",
+      rate: "6%",
+      term: "7 years",
+      prepaymentPenalty: "None",
+      payment: "180",
       paymentFrequency: "Weekly",
       status: "Funding",
       stips: []
     },
-    { 
-      lender: "123 Loans", 
-      amount: 40000, 
-      rate: "5.75%", 
-      term: "4 years", 
-      prepaymentPenalty: "1% for first year", 
-      payment: 230, 
+    {
+      lender: "123 Loans",
+      amount: "40000",
+      rate: "5.75%",
+      term: "4 years",
+      prepaymentPenalty: "1% for first year",
+      payment: "230",
       paymentFrequency: "Weekly",
       status: "Declined",
       stips: []
     },
-  ]
+  ]);
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
     }
-    
+
     const fetchApplicationData = async () => {
       const user = auth.currentUser
 
       if (user) {
-        // Fetch the most recent application
-        const applicationsRef = collection(db, 'users', user.uid, 'applications');
+        try {
+          // Fetch the most recent application in progress
+          const applicationsRef = collection(db, 'users', user.uid, 'applications');
+          const inProgressQuery = query(applicationsRef, where('status', '==', 'In Progress'));
 
+          const querySnapshot = await getDocs(inProgressQuery);
 
-        const inProgressQuery = query(applicationsRef, where('status', '==', 'In Progress'));
+          if (!querySnapshot.empty) {
+            const applicationDoc = querySnapshot.docs[0];
+            setCurrentApplication({
+              id: applicationDoc.id,
+              ...(applicationDoc.data() as Application),
+            });
+          } else {
+            console.log('No in-progress application found.');
+            setCurrentApplication(null);
+          }
 
-        const querySnapshot = await getDocs(inProgressQuery);
+          // Fetch application history
+          const historyRef = collection(db, 'users', user.uid, 'applications');
+          const historyQuery = query(historyRef, orderBy('submissionDate', 'desc'), limit(10));
+          const historySnap = await getDocs(historyQuery);
 
-        console.log(querySnapshot);
-
-        if (!querySnapshot.empty) {
-          const applicationDoc = querySnapshot.docs[0];
-          setCurrentApplication({ id: applicationDoc.id, ...applicationDoc.data() });
-          console.log('In-progress application found:', currentApplication);
+          if (!historySnap.empty) {
+            const history = historySnap.docs.map((doc) => ({
+              id: doc.id,
+              ...(doc.data() as Application),
+            }));
+            setApplicationHistory(history);
+          } else {
+            console.log('No application history found.');
+            setApplicationHistory([]);
+          }
+        } catch (error) {
+          console.error('Error fetching application data:', error);
         }
-       
-        // Fetch application history
-        const historyRef = collection(db, 'users', user.uid, 'applications')
-        const historyQuery = query(historyRef, orderBy('submissionDate', 'desc'), limit(10))
-        const historySnap = await getDocs(historyQuery)
-        
-        const history = historySnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-        setApplicationHistory(history);
-
-        console.log('ddddddddd',applicationHistory);
       }
     }
-    if(user){
+    if (user) {
       fetchApplicationData()
+      checkExistingFiles()
     }
 
-  }, [user, loading, router]);
+  }, [user, loading, router,isUploadModalOpen]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -122,10 +140,14 @@ export default function LoanStatus() {
     return null;
   }
 
-  const handleAcceptOffer = (offer: React.SetStateAction<null>) => {
-    setSelectedOffer(offer)
-    setIsOfferDetailsOpen(true)
-  }
+  const handleAcceptOffer = (offer: Offer | null) => {
+    if (offer) {
+      setSelectedOffer(offer);
+      setIsOfferDetailsOpen(true);
+    } else {
+      console.warn("Attempted to accept an invalid offer");
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -140,9 +162,30 @@ export default function LoanStatus() {
     }
   }
 
-  const handleUploadStip = (offer: React.SetStateAction<null>) => {
+  const handleUploadStip = (offer: Offer | null) => {
     setSelectedOffer(offer)
     setIsStipUploadOpen(true)
+  }
+
+  const checkExistingFiles = async () => {
+    const storage = getStorage()
+    const updatedDocuments: Document[] = await Promise.all(
+      documents.map(async (doc): Promise<Document> => {
+        const fileRef = ref(storage, `user_files/${user.uid}/${doc.name}`)
+        try {
+          await getDownloadURL(fileRef)
+          return { ...doc, status: 'uploaded' }
+        } catch {
+          // File does not exist
+          return { ...doc, status: 'pending' }
+        }
+      })
+    )
+    setDocuments(updatedDocuments)
+
+    const anyPending = updatedDocuments.some((doc) => doc.status === 'pending');
+    setHasPendingDocuments(anyPending);
+
   }
 
   return (
@@ -155,7 +198,7 @@ export default function LoanStatus() {
         <div className="px-4 py-6 sm:px-0">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">Loan Application Status</h1>
 
-          {currentApplication &&  <Card className="mb-6">
+          {currentApplication && <Card className="mb-6">
             <CardHeader>
               <CardTitle>Current Application</CardTitle>
               <CardDescription>Status of your most recent loan application</CardDescription>
@@ -200,29 +243,27 @@ export default function LoanStatus() {
             </CardHeader>
             <CardContent>
               <ul className="space-y-2">
-                <li className="flex items-center">
-                  <FileCheck className="h-5 w-5 text-green-500 mr-2" />
-                  <span>Banking Statements</span>
-                </li>
-                <li className="flex items-center">
-                  <FileCheck className="h-5 w-5 text-green-500 mr-2" />
-                  <span>Tax Returns</span>
-                </li>
-                <li className="flex items-center">
-                  <FileText className="h-5 w-5 text-gray-400 mr-2" />
-                  <span>Profit & Loss Statement</span>
-                </li>
-                <li className="flex items-center">
-                  <FileText className="h-5 w-5 text-gray-400 mr-2" />
-                  <span>Balance Sheet</span>
-                </li>
+                {documents.map((doc) => (
+                  <li key={doc.name} className="flex items-center">
+                    {doc.status === 'uploaded' ? (
+                      <FileCheck className="h-5 w-5 text-green-500 mr-2" />
+                    ) : (
+                      <FileText className="h-5 w-5 text-gray-400 mr-2" />
+                    )}
+                    <span>{doc.name}</span>
+                  </li>
+                ))}
               </ul>
+
             </CardContent>
             <CardFooter>
-              <Button variant="outline" onClick={() => setIsUploadModalOpen(true)}>
-                Upload Missing Documents
-                <ChevronRight className="h-4 w-4 ml-2" />
-              </Button>
+              {hasPendingDocuments && (
+                <Button variant="outline" onClick={() => setIsUploadModalOpen(true)}>
+                  Upload Missing Documents
+                  <ChevronRight className="h-4 w-4 ml-2" />
+                </Button>
+              )}
+
             </CardFooter>
           </Card>
 
@@ -274,36 +315,32 @@ export default function LoanStatus() {
               <CardDescription>Your past loan applications and their outcomes</CardDescription>
             </CardHeader>
             <CardContent>
-            <div className="flex justify-between w-full">
-            <span>Application ID</span>
-            <span>Legal Name</span>
-            <span>Submission date</span>
-            <span>Amount</span>
-            <span>Status</span>
-            </div>  
-              <Accordion type="single" collapsible className="w-full">
-                {applicationHistory.map((application,index) => (
-                  <AccordionItem value={`item-${index}`} key={index}>
-                    <AccordionTrigger>
-                      <div className="flex justify-between w-full">
-                      <span>{application.id}</span>
-                      <span>{application.legalName}</span>
-                      <span>{application.submissionDate?.toDate().toLocaleDateString()}</span>
-                        <span>${application.loanAmount.toLocaleString()}</span>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>#ID</TableHead>
+                    <TableHead>Lender</TableHead>
+                    <TableHead>Submission Date</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {applicationHistory.map((application, index) => (
+                    <TableRow key={index}>
+                      <TableCell>#{application.id}</TableCell>
+                      <TableCell>{application.legalName}</TableCell>
+                      <TableCell>{application.submissionDate?.toDate().toLocaleDateString()}</TableCell>
+                      <TableCell>${application.loanAmount.toLocaleString()}</TableCell>
+                      <TableCell>
                         <Badge variant={application.status === "Approved" ? "success" : "destructive"}>
                           {application.status}
                         </Badge>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="pt-4">
-                        <h4 className="font-semibold mb-2">Lender Offers</h4>
-                          <p>No offers were received for this application.</p>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </div>
@@ -317,9 +354,10 @@ export default function LoanStatus() {
 
       </main>
 
-      <UploadDocumentsModal 
-        isOpen={isUploadModalOpen} 
-        onClose={() => setIsUploadModalOpen(false)} 
+      <UploadDocumentsModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        userId={user.uid}
       />
 
       <Dialog open={isOfferDetailsOpen} onOpenChange={setIsOfferDetailsOpen}>
@@ -342,16 +380,22 @@ export default function LoanStatus() {
                 <div className="mt-4">
                   <h4 className="font-semibold mb-2">Additional Documents Required:</h4>
                   <ul className="list-disc pl-5">
-                    {selectedOffer.stips.map((stip: { name: string | number | bigint | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<React.AwaitedReactNode> | null | undefined; status: string | number | bigint | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | Promise<React.AwaitedReactNode> | null | undefined }, index: React.Key | null | undefined) => (
+                    {selectedOffer?.stips.map((stip, index) => (
                       <li key={index} className="mb-2">
                         {stip.name} - {stip.status}
-                        {stip.status === "Pending" && (
-                          <Button size="sm" variant="outline" className="ml-2" onClick={() => handleUploadStip(selectedOffer)}>
+                        {stip.status === "pending" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="ml-2"
+                            onClick={() => handleUploadStip(selectedOffer)}
+                          >
                             Upload
                           </Button>
                         )}
                       </li>
                     ))}
+
                   </ul>
                 </div>
               )}

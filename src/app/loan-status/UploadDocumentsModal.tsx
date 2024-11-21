@@ -3,19 +3,17 @@ import { Upload, FileText, CheckCircle } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Progress } from "@/components/ui/progress"
-import { getStorage, ref, uploadBytesResumable } from 'firebase/storage'
-
-interface Document {
-  name: string;
-  status: 'pending' | 'uploaded';
-}
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
+import { Document } from '@/types/user'
 
 interface UploadDocumentsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  userId: string; // Add userId as a prop
 }
 
-export function UploadDocumentsModal({ isOpen, onClose }: UploadDocumentsModalProps) {
+export function UploadDocumentsModal({ isOpen, onClose, userId }: UploadDocumentsModalProps) {
+
   const [documents, setDocuments] = React.useState<Document[]>([
     { name: 'Banking Statements ', status: 'pending' },
     { name: 'Tax Returns', status: 'pending' },
@@ -26,6 +24,30 @@ export function UploadDocumentsModal({ isOpen, onClose }: UploadDocumentsModalPr
   const [uploading, setUploading] = React.useState(false)
   const [uploadProgress, setUploadProgress] = React.useState(0)
 
+  React.useEffect(() => {
+    if (isOpen) {
+      checkExistingFiles()
+    }
+  }, [isOpen])
+
+  const checkExistingFiles = async () => {
+    const storage = getStorage()
+    const updatedDocuments: Document[] = await Promise.all(
+      documents.map(async (doc): Promise<Document> => {
+        const fileRef = ref(storage, `user_files/${userId}/${doc.name}`)
+        try {
+          await getDownloadURL(fileRef)
+          return { ...doc, status: 'uploaded' }
+        } catch {
+          // File does not exist
+          return { ...doc, status: 'pending' } 
+        }
+      })
+    )
+    setDocuments(updatedDocuments)
+  }
+  
+
   const handleFileUpload = async (documentName: string) => {
     const fileInput = document.createElement('input')
     fileInput.type = 'file'
@@ -34,7 +56,7 @@ export function UploadDocumentsModal({ isOpen, onClose }: UploadDocumentsModalPr
       const file = (event.target as HTMLInputElement).files?.[0]
       if (file) {
         const storage = getStorage()
-        const storageRef = ref(storage, `uploads/${documentName}-${Date.now()}`)
+        const storageRef = ref(storage, `user_files/${userId}/${documentName}`)
         const uploadTask = uploadBytesResumable(storageRef, file)
 
         setUploading(true)
