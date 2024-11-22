@@ -1,66 +1,117 @@
-import React from 'react'
-import { DollarSign } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import React from 'react';
+import { DollarSign } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Application } from '@/types/user';
 
 interface FinancialInformationProps {
-  formData: any;
+  formData: Pick<
+    Application,
+    | 'grossAnnualSales'
+    | 'averageMonthlySales'
+    | 'lastMonthSales'
+    | 'businessBankName'
+    | 'creditCardProcessor'
+    | 'averageMonthlyCreditCardSales'
+  >;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   errors: { [key: string]: string };
 }
 
-export function FinancialInformation({ 
-    formData, 
-    handleInputChange, 
-    errors,
-  }: FinancialInformationProps) {
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>
-                    <DollarSign className="inline-block w-6 h-6 mr-2" />
-                    Business Financial Information
-                </CardTitle>
-                <CardDescription>Provide financial details about your business</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-6">
-                <div>
-                    <Label htmlFor="grossAnnualSales">Gross Annual Sales (${`Last Year's Tax Return`})</Label>
-                    <Input id="grossAnnualSales" name="grossAnnualSales" type="number" placeholder="$0.00" onChange={handleInputChange} value={formData.grossAnnualSales} />
-                    {errors.grossAnnualSales && <p className="text-red-500 text-sm mt-1">{errors.grossAnnualSales}</p>}
-                </div>
-                <div>
-                    <Label htmlFor="averageMonthlySales">Average Monthly Sales</Label>
-                    <Input id="averageMonthlySales" name="averageMonthlySales" type="number" placeholder="$0.00" onChange={handleInputChange} value={formData.averageMonthlySales} />
-                    {errors.averageMonthlySales && <p className="text-red-500 text-sm mt-1">{errors.averageMonthlySales}</p>}
+interface FieldProps {
+  id: string;
+  label: string;
+  type?: string;
+  placeholder?: string;
+  value: string;
+  error?: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
 
-                </div>
-                <div>
-                    <Label htmlFor="lastMonthSales">Last Month Total Sales</Label>
-                    <Input id="lastMonthSales" name="lastMonthSales" type="number" placeholder="$0.00" onChange={handleInputChange} value={formData.lastMonthSales} />
-                    {errors.lastMonthSales && <p className="text-red-500 text-sm mt-1">{errors.lastMonthSales}</p>}
+const Field: React.FC<FieldProps> = ({ id, label, type = 'text', placeholder, value, error, onChange }) => (
+  <div>
+    <Label htmlFor={id}>{label}</Label>
+    <Input
+      id={id}
+      name={id}
+      type={type}
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      aria-invalid={!!error}
+      aria-describedby={`${id}-error`}
+    />
+    {error && <p id={`${id}-error`} className="text-red-500 text-sm mt-1">{error}</p>}
+  </div>
+);
 
-                </div>
-                <div>
-                    <Label htmlFor="businessBankName">Business Bank Name</Label>
-                    <Input id="businessBankName" name="businessBankName" onChange={handleInputChange} value={formData.businessBankName} />
-                    {errors.businessBankName && <p className="text-red-500 text-sm mt-1">{errors.businessBankName}</p>}
-                </div>
-                <div>
-                    <Label htmlFor="creditCardProcessor">Credit Card Processor</Label>
-                    <Input id="creditCardProcessor" name="creditCardProcessor" onChange={handleInputChange} value={formData.creditCardProcessor} />
-                    {errors.creditCardProcessor && <p className="text-red-500 text-sm mt-1">{errors.creditCardProcessor}</p>}
-
-                </div>
-                <div>
-                    <Label htmlFor="averageMonthlyCreditCardSales">Average Monthly Credit Card Sales</Label>
-                    <Input id="averageMonthlyCreditCardSales" name="averageMonthlyCreditCardSales" type="number" placeholder="$0.00" onChange={handleInputChange} value={formData.averageMonthlyCreditCardSales} />
-                    {errors.averageMonthlyCreditCardSales && <p className="text-red-500 text-sm mt-1">{errors.averageMonthlyCreditCardSales}</p>}
-
-                </div>
-                {/* Add more fields here */}
-            </CardContent>
-        </Card>
-    )
-  }
+export function FinancialInformation({
+  formData,
+  handleInputChange,
+  errors,
+}: FinancialInformationProps) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          <DollarSign className="inline-block w-6 h-6 mr-2" />
+          Business Financial Information
+        </CardTitle>
+        <CardDescription>Provide financial details about your business</CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-6">
+        <Field
+          id="grossAnnualSales"
+          label="Gross Annual Sales (Last Year's Tax Return)"
+          type="number"
+          placeholder="$0.00"
+          value={formData.grossAnnualSales}
+          error={errors.grossAnnualSales}
+          onChange={handleInputChange}
+        />
+        <Field
+          id="averageMonthlySales"
+          label="Average Monthly Sales"
+          type="number"
+          placeholder="$0.00"
+          value={formData.averageMonthlySales}
+          error={errors.averageMonthlySales}
+          onChange={handleInputChange}
+        />
+        <Field
+          id="lastMonthSales"
+          label="Last Month Total Sales"
+          type="number"
+          placeholder="$0.00"
+          value={formData.lastMonthSales}
+          error={errors.lastMonthSales}
+          onChange={handleInputChange}
+        />
+        <Field
+          id="businessBankName"
+          label="Business Bank Name"
+          value={formData.businessBankName}
+          error={errors.businessBankName}
+          onChange={handleInputChange}
+        />
+        <Field
+          id="creditCardProcessor"
+          label="Credit Card Processor"
+          value={formData.creditCardProcessor}
+          error={errors.creditCardProcessor}
+          onChange={handleInputChange}
+        />
+        <Field
+          id="averageMonthlyCreditCardSales"
+          label="Average Monthly Credit Card Sales"
+          type="number"
+          placeholder="$0.00"
+          value={formData.averageMonthlyCreditCardSales}
+          error={errors.averageMonthlyCreditCardSales}
+          onChange={handleInputChange}
+        />
+      </CardContent>
+    </Card>
+  );
+}
