@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { DollarSign, Calendar, FileText, Download } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
-import Link from 'next/link';
+import { DashboardBack } from '@/components/dashboard-back';
 
 export default function Loan() {
   
@@ -191,12 +191,8 @@ export default function Loan() {
             </button>
           </div>
         </div>
-        <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-3">
+        <DashboardBack />
 
-          <Link href="/dashboard" className="flex items-center text-gray-900 hover:bg-gray-50 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-            Back to Dashboard
-          </Link>
-        </div>
       </main>
     </div>
   );

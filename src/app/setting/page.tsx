@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import Link from 'next/link';
+import { DashboardBack } from '@/components/dashboard-back';
 
 export default function Setting() {
   const { user, loading } = useAuth();
@@ -252,12 +252,8 @@ export default function Setting() {
               </Card>
             </div>
           </div>
-          <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-3">
+          <DashboardBack />
 
-          <Link href="/dashboard" className="flex items-center text-gray-900 hover:bg-gray-50 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-            Back to Dashboard
-          </Link>
-        </div>
         </main>
       </div>
     );

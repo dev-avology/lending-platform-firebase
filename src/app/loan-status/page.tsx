@@ -12,11 +12,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link'
 import { auth, db } from '@/lib/firebase'
 import { collection, getDocs, limit, orderBy, query, where } from 'firebase/firestore'
 import { Document, Application, Offer } from '@/types/user'
 import { getStorage, ref, getDownloadURL } from 'firebase/storage'
+import { DashboardBack } from '@/components/dashboard-back'
 
 
 export default function LoanStatus() {
@@ -345,12 +345,7 @@ export default function LoanStatus() {
           </Card>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-3">
-
-          <Link href="/dashboard" className="flex items-center text-gray-900 hover:bg-gray-50 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-            Back to Dashboard
-          </Link>
-        </div>
+        <DashboardBack />
 
       </main>
 

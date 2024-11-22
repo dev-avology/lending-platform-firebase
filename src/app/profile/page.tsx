@@ -10,8 +10,8 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import Link from 'next/link';
 import { useUser } from '@/contexts/UserContext';
+import { DashboardBack } from '@/components/dashboard-back';
 
 export default function Profile() {
   const { user, loading } = useAuth();
@@ -138,12 +138,7 @@ export default function Profile() {
             </CardFooter>
           </Card>
         </div>
-        <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-3">
-
-<Link href="/dashboard" className="flex items-center text-gray-900 hover:bg-gray-50 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-  Back to Dashboard
-</Link>
-</div>
+        <DashboardBack />
       </main>
     </div>
   );
