@@ -84,7 +84,7 @@ export default function Loan() {
                 <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                   <dt className="text-sm font-medium text-gray-500">Next Payment Due</dt>
                   <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {new Date(Math.min(...loans.map(loan => new Date(loan.nextPayment)))).toLocaleDateString()}
+                   {new Date(Math.min(...loans.map(loan => new Date(loan.nextPayment).getTime()))).toLocaleDateString()}
                   </dd>
                 </div>
               </dl>
