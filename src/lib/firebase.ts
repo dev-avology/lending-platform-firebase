@@ -1,15 +1,16 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
+import { UserData } from "@/types/user";
 import { 
-  getAuth, 
-  GoogleAuthProvider, 
-  signInWithPopup, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  sendPasswordResetEmail, 
-  signOut,
-  UserCredential,
+  initializeApp, getApps, getApp 
+} from "firebase/app";
+import { 
+  getAuth, GoogleAuthProvider, signInWithPopup, 
+  createUserWithEmailAndPassword, signInWithEmailAndPassword, 
+  sendPasswordResetEmail, signOut, UserCredential 
 } from "firebase/auth";
-import { getFirestore, doc, setDoc, collection, addDoc, query, orderBy, limit, getDocs, Timestamp, getDoc, where } from "firebase/firestore";
+import { 
+  getFirestore, doc, setDoc, collection, addDoc, 
+  query, orderBy, limit, getDocs, Timestamp, getDoc, where, updateDoc 
+} from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -20,101 +21,106 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 
-// Firebase Authentication functions
-export const register = async (email: string, password: string): Promise<UserCredential> => {
-  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-  return userCredential;
-};
+/** Authentication Methods */
+export const register = (email: string, password: string): Promise<UserCredential> => 
+  createUserWithEmailAndPassword(auth, email, password);
 
-export const login = (email: string, password: string): Promise<UserCredential> => {
-  return signInWithEmailAndPassword(auth, email, password);
-};
+export const login = (email: string, password: string): Promise<UserCredential> => 
+  signInWithEmailAndPassword(auth, email, password);
 
-export const logout = (): Promise<void> => {
-  return signOut(auth);
-};
+export const logout = (): Promise<void> => signOut(auth);
 
-// Google Sign-In function
-export const signInWithGoogle = (): Promise<UserCredential> => {
-  return signInWithPopup(auth, googleProvider);
-};
+export const signInWithGoogle = (): Promise<UserCredential> => signInWithPopup(auth, googleProvider);
 
-// Password Recovery function
-export const recoverPassword = (email: string): Promise<void> => {
-  return sendPasswordResetEmail(auth, email);
-};
+export const recoverPassword = (email: string): Promise<void> => 
+  sendPasswordResetEmail(auth, email);
 
-// TypeScript interface for form data
-interface FormData {
-  email: string;
-  firstName: string;
-  lastName: string;
-  phoneNumber: string;
-  username: string;
-  dateOfBirth: string;
-  ssn: string;
-  businessName: string;
-  businessAddress: string;
-  industry: string;
-  photoURL: string;
-}
-
-// Function to save user data in Firestore
-export const saveUserData = async (userId: string, formData: FormData) => {
+/** Firestore Operations */
+const saveDocument = async (path: string, data: object) => {
   try {
-    await setDoc(doc(db, 'users', userId), {
-      ...formData,
-      createdAt: Timestamp.now(),
-      registrationComplete: true,
-    });
-    console.log('User data saved successfully!');
+    await setDoc(doc(db, path), data);
+    console.log(`Document saved to path: ${path}`);
   } catch (error) {
-    console.error('Error saving user data:', error);
+    console.error(`Error saving document at ${path}:`, error);
   }
 };
 
-// Function to save user data in Firestore
-export const getUserData = async (user: any) => {
-  try {
-    if (!user) {
-      throw new Error("No authenticated user found");
-    }
-    const userDoc = await getDoc(doc(db, 'users', user.uid))
+export const saveUserData = async (userId: string, formData: UserData) => {
+  const data = { ...formData, createdAt: Timestamp.now(), registrationComplete: true };
+  await saveDocument(`users/${userId}`, data);
+};
 
-    return userDoc;
+export const getUserData = async (uid: string) => {
+  try {
+    const docRef = doc(db, `users/${uid}`);
+    const userDoc = await getDoc(docRef);
+
+    if (userDoc.exists()) {
+      return userDoc.data() as UserData;
+    } else {
+      console.error('No user data found for UID:', uid);
+      return null;
+    }
   } catch (error) {
-    console.error('Error saving user data:', error);
+    console.error('Error fetching user data:', error);
     return null;
   }
 };
 
+export const updateUserProfile = async (userData: UserData) => {
+  try {
+    console.log(userData);
 
-// Function to save a loan application
+    const userRef = doc(db, 'users', userData.uid);
+
+    // Create an update object with only the fields to be updated
+    const updateData: Partial<UserData> = {
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      email: userData.email,
+      phoneNumber: userData.phoneNumber,
+      businessName: userData.businessName,
+      businessAddress: userData.businessAddress,
+      industry: userData.industry,
+      bio:userData.bio
+    };
+
+    // Ensure that optional fields like photoURL are included only if they exist
+    if (userData.photoURL) {
+      updateData.photoURL = userData.photoURL;
+    }
+    
+    console.log(updateData);
+
+    await updateDoc(userRef, updateData);
+    console.log('Profile updated successfully!');
+  } catch (error) {
+    console.log('Error updating profile:', error);
+    throw new Error('Failed to update profile');
+  }
+};
+
+/** Loan Application Methods */
 export const saveLoanApplication = async (data: any) => {
   const user = auth.currentUser;
-  if (!user) {
-    throw new Error("No authenticated user found");
-  }
+  if (!user) throw new Error("No authenticated user found");
 
   try {
-    const applicationsRef = collection(db, 'users', user.uid, 'applications');
-
-
+    const applicationsRef = collection(db, `users/${user.uid}/applications`);
     const inProgressQuery = query(applicationsRef, where('status', '==', 'In Progress'));
-
     const querySnapshot = await getDocs(inProgressQuery);
 
     if (!querySnapshot.empty) {
-      console.log('An application is already in progress. Cannot add another one.');
+      console.warn('An application is already in progress.');
       return null;
     }
 
-    const newApplication = {
+    const application = {
       ...data,
       userId: user.uid,
       submissionDate: Timestamp.now(),
@@ -122,36 +128,28 @@ export const saveLoanApplication = async (data: any) => {
       loanAmount: data.grossAnnualSales ? parseFloat(data.grossAnnualSales) * 0.1 : 0,
     };
 
-    const docRef = await addDoc(applicationsRef, newApplication);
-
-    console.log('Application submitted successfully with ID:', docRef.id);
-
+    const docRef = await addDoc(applicationsRef, application);
+    console.log('Loan application saved with ID:', docRef.id);
     return { id: docRef.id };
-
   } catch (error) {
-    console.error("Error adding loan application:", error);
+    console.error("Error saving loan application:", error);
     throw error;
   }
 };
 
-// Function to fetch the latest application
 export const fetchLatestApplication = async () => {
   const user = auth.currentUser;
-  if (!user) {
-    throw new Error("No authenticated user found");
-  }
+  if (!user) throw new Error("No authenticated user found");
 
   try {
-    const applicationsRef = collection(db, 'users', user.uid, 'applications');
-    const latestApplicationQuery = query(applicationsRef, orderBy('submissionDate', 'desc'), limit(1));
-    const querySnapshot = await getDocs(latestApplicationQuery);
+    const applicationsRef = collection(db, `users/${user.uid}/applications`);
+    const latestQuery = query(applicationsRef, orderBy('submissionDate', 'desc'), limit(1));
+    const querySnapshot = await getDocs(latestQuery);
 
     if (!querySnapshot.empty) {
-      const latestApplication = querySnapshot.docs[0].data();
-      console.log('Latest application:', latestApplication);
-      return latestApplication;
+      return querySnapshot.docs[0].data();
     } else {
-      console.log('No applications found');
+      console.log('No applications found.');
       return null;
     }
   } catch (error) {

@@ -3,18 +3,20 @@ import { Timestamp } from 'firebase/firestore';
 
 export interface UserData {
     uid: string
-    businessAddress:string
-    businessName:string
-    dateOfBirth:string
-    email:string
     firstName:string
-    industry:string
     lastName:string
+    email:string
     phoneNumber:string
-    photoURL:string
-    registrationComplete:boolean
-    ssn:string
     username:string
+    dateOfBirth:string
+    ssn:string
+    businessName:string
+    businessAddress:string
+    industry:string
+    photoURL?:string
+    bio?: string
+    registrationComplete:boolean
+    createdAt: Timestamp | null
   }
 
 
