@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Bell, Lock, CreditCard, User, HelpCircle, ChevronRight, Building, Plus } from 'lucide-react'
+import { Bell, Lock, CreditCard, User, HelpCircle, ChevronRight } from 'lucide-react'
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DashboardBack } from '@/components/dashboard-back';
+import PlaidConnectButton from '@/components/plaid/PlaidConnectButton';
 
 export default function Setting() {
   const { user, loading } = useAuth();
@@ -160,13 +161,14 @@ export default function Setting() {
                   <CardDescription>Manage your connected bank accounts via Plaid or Decision Logic</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  {/* <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Building className="h-4 w-4" />
                       <span>Chase Business Checking (...1234)</span>
                     </div>
                     <Button variant="outline" size="sm">Disconnect</Button>
                   </div>
+                  
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Building className="h-4 w-4" />
@@ -174,20 +176,16 @@ export default function Setting() {
                     </div>
                     <Button variant="outline" size="sm">Disconnect</Button>
                   </div>
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Building className="h-4 w-4" />
                       <span>Bank of America Business (...9012)</span>
                     </div>
                     <Button variant="outline" size="sm">Disconnect</Button>
-                  </div>
-                  <Button variant="outline" className="w-full justify-between">
-                    <span className="flex items-center">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Connect New Bank Account
-                    </span>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+                  </div> */}
+
+                  <PlaidConnectButton />
                 </CardContent>
               </Card>
   
