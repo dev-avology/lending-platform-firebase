@@ -1,7 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import PlaidLinkComponent from './PlaidLinkComponent';
 import { PlaidLinkOnSuccessMetadata } from 'react-plaid-link';
+import { apiClient } from '@/lib/apiClient';
+import { firebaseService } from '@/lib/firebaseService';
 
 // Define the response type from the backend
 interface LinkTokenResponse {
@@ -11,6 +14,10 @@ interface LinkTokenResponse {
 interface ExchangeTokenResponse {
     access_token: string;
     item_id: string;
+  }
+
+  interface AccountResponse {
+    accounts: any;
   }
 
 const PlaidConnectButton: React.FC = () => {
@@ -54,29 +61,41 @@ const PlaidConnectButton: React.FC = () => {
     const institutionName = metadata.institution?.name || 'Unknown Institution';
     
     console.log('Bank Linked:', institutionName);
-    
+    console.log('Bank Linked:', metadata);
+
     console.log('Public Token:', publicToken);
 
     if (!user) return;
     try {
-        const response = await fetch('https://exchangetokencent-wdlskx222a-uc.a.run.app', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                publicToken: publicToken, // Pass user_id in request body
-                clientUserId: user.uid,
-            }),
-          });
-  
-          if (!response.ok) {
-            throw new Error('Failed to fetch exchange token');
-          } 
 
-        const data: ExchangeTokenResponse = await response.json();
+        const response: ExchangeTokenResponse = await apiClient.post('https://exchangetokencent-wdlskx222a-uc.a.run.app', { publicToken:publicToken,clientUserId:user.uid});
 
-        console.log(data);
+        console.log('Exchange Data:',response);
+
+
+        const response1: AccountResponse = await apiClient.post('/api/plaid/getAccountDetails', { accessToken:response.access_token,itemId:response.item_id,userId:user.uid});
+
+        console.log('Exchange Data:',response1);
+
+        if (response1.accounts.length) {
+          // Prepare the bulk data for Firestore
+          const accounts = response1.accounts;
+          console.log('accounts',accounts);
+
+          const bulkData = accounts.map((account: {account_id:string, persistent_account_id:string, name: string; mask: string; }) => ({
+              id:account.account_id,
+              persistent_id:account.persistent_account_id,
+              name: account.name,
+              bank_name:institutionName,
+              mask: account.mask,
+              access_token:response.access_token,
+              item_id:response.item_id
+          }));
+          
+          console.log(bulkData);
+
+          await firebaseService.bulkCreate(`users/${user.uid}/banks`, bulkData);
+      }
 
       } catch (error) {
         console.log('Failed to fetch exchange token:', error);

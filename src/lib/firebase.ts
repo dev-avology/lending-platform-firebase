@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { UserData } from "@/types/user";
 import { 
   initializeApp, getApps, getApp 

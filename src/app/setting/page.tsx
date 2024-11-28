@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DashboardBack } from '@/components/dashboard-back';
 import PlaidConnectButton from '@/components/plaid/PlaidConnectButton';
+import PlaidConnectAccount from '@/components/plaid/PlaidConnectAccount';
 
 export default function Setting() {
   const { user, loading } = useAuth();
@@ -175,16 +176,8 @@ export default function Setting() {
                       <span>Wells Fargo Savings (...5678)</span>
                     </div>
                     <Button variant="outline" size="sm">Disconnect</Button>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Building className="h-4 w-4" />
-                      <span>Bank of America Business (...9012)</span>
-                    </div>
-                    <Button variant="outline" size="sm">Disconnect</Button>
-                  </div> */}
-
+                  </div>*/}
+                  <PlaidConnectAccount />
                   <PlaidConnectButton />
                 </CardContent>
               </Card>
