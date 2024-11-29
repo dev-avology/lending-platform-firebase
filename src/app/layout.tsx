@@ -4,6 +4,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 
 import { UserProvider } from '@/contexts/UserContext'
 
+import { BankAccountsProvider } from '@/contexts/BankAccountsContext';
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -22,7 +23,9 @@ export default function RootLayout({
       >
         <AuthProvider>
           <UserProvider>
-            {children}
+            <BankAccountsProvider>
+             {children}
+            </BankAccountsProvider>
           </UserProvider>
         </AuthProvider>
       </body>

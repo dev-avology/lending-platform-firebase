@@ -1,9 +1,11 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '../ui/button';
 import { Building } from 'lucide-react';
 import { firebaseService } from '@/lib/firebaseService';
+import { useBankAccounts } from '@/contexts/BankAccountsContext';
 
 interface ConnectedBanks {
   id: string;
@@ -13,27 +15,29 @@ interface ConnectedBanks {
   mask: string;
   access_token: string;
   item_id: string;
+  status: boolean;
 }
 
 const PlaidConnectAccount: React.FC = () => {
-  const [accounts, setAccounts] = useState<ConnectedBanks[]>([]); // Initialized as an empty array
   const { user, loading } = useAuth();
+  const { accounts, setAccounts } = useBankAccounts();
+
+  const fetchAccounts = async () => {
+    if (!user) return;
+
+    try {
+      const banks: ConnectedBanks[] = await firebaseService.getCollection(`users/${user.uid}/banks`);
+      setAccounts(banks);
+    } catch {
+      console.log('Unable to fetch account');
+    }
+  }
 
   useEffect(() => {
     // Fetch link token from your backend
-    const fetchAccounts = async () => {
-      if (!user) return;
 
-      try {
-
-        const banks = await firebaseService.getCollection(`users/${user.uid}/banks`);
-        setAccounts(banks);
-        console.log(banks);
-        console.log(accounts);
-    }catch{}
-    }
     fetchAccounts();
-}, [user]);
+  }, [user]);
 
 
   if (loading) return <div>Loading...</div>;
@@ -41,7 +45,7 @@ const PlaidConnectAccount: React.FC = () => {
   if (!user) return <div>Please log in to connect your bank.</div>;
 
   return (
-    <div>
+    <>
       {accounts.length === 0 ? (
         <div>No connected bank accounts found.</div>
       ) : (
@@ -53,25 +57,49 @@ const PlaidConnectAccount: React.FC = () => {
             <div className="flex items-center space-x-2">
               <Building className="h-4 w-4" />
               <span>
-                {account.bank_name} ({account.name} • ...{account.mask})
+                {account.bank_name} ({account.name} ...{account.mask})
               </span>
             </div>
-            <Button
+            {account.status ? <Button
               variant="outline"
               size="sm"
               onClick={() => handleDisconnect(account.id)} // Disconnect handler
             >
               Disconnect
-            </Button>
+            </Button> : <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleConnect(account.id)} // Disconnect handler
+            >
+              Connect
+            </Button>}
+
           </div>
         ))
-      )}
-    </div>
+      )
+      }
+    </>
   );
 
-  function handleDisconnect(id: string) {
+  async function handleDisconnect(id: string) {
     // TODO: Implement disconnect logic
+    if (!user) return;
+
+    await firebaseService.update(`users/${user.uid}/banks`,id,{status:false});
+    fetchAccounts();
+
     console.log(`Disconnect account with ID: ${id}`);
+  }
+
+
+  async function handleConnect(id: string) {
+    // TODO: Implement disconnect logic
+    if (!user) return;
+    
+     await firebaseService.update(`users/${user.uid}/banks`,id,{status:true});
+     fetchAccounts();
+
+    console.log(`Connect account with ID: ${id}`);
   }
 };
 

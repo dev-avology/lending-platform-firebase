@@ -5,6 +5,7 @@ import PlaidLinkComponent from './PlaidLinkComponent';
 import { PlaidLinkOnSuccessMetadata } from 'react-plaid-link';
 import { apiClient } from '@/lib/apiClient';
 import { firebaseService } from '@/lib/firebaseService';
+import { useBankAccounts } from '@/contexts/BankAccountsContext';
 
 // Define the response type from the backend
 interface LinkTokenResponse {
@@ -23,6 +24,7 @@ interface ExchangeTokenResponse {
 const PlaidConnectButton: React.FC = () => {
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const { user, loading } = useAuth();
+  const { setAccounts } = useBankAccounts();
 
   useEffect(() => {
     // Fetch link token from your backend
@@ -89,12 +91,16 @@ const PlaidConnectButton: React.FC = () => {
               bank_name:institutionName,
               mask: account.mask,
               access_token:response.access_token,
-              item_id:response.item_id
+              item_id:response.item_id,
+              status:true
           }));
           
           console.log(bulkData);
 
-          await firebaseService.bulkCreate(`users/${user.uid}/banks`, bulkData);
+          await firebaseService.bulkCreate(`users/${user.uid}/banks`, bulkData,'persistent_id');
+
+          setAccounts((prevAccounts) => [...prevAccounts, ...bulkData]);
+
       }
 
       } catch (error) {

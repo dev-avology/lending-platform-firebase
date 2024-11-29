@@ -13,10 +13,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DashboardBack } from '@/components/dashboard-back';
 import PlaidConnectButton from '@/components/plaid/PlaidConnectButton';
 import PlaidConnectAccount from '@/components/plaid/PlaidConnectAccount';
+import { useUser } from '@/contexts/UserContext';
 
 export default function Setting() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const { userData,loading:userLoading } = useUser();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -24,7 +26,7 @@ export default function Setting() {
     }
   }, [user, loading, router]);
 
-  if (loading) {
+  if (loading && userLoading) {
     return <div>Loading...</div>;
   }
 
@@ -51,15 +53,15 @@ export default function Setting() {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Full Name</Label>
-                    <Input id="name" defaultValue="John Doe" />
-                  </div>
+                    <Input id="name" defaultValue={`${userData?.firstName || ''} ${userData?.lastName || ''}`.trim()} />
+                    </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address</Label>
-                    <Input id="email" type="email" defaultValue="john.doe@example.com" />
+                    <Input id="email" type="email" defaultValue={userData?.email || ''} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" type="tel" defaultValue="+1 (555) 123-4567" />
+                    <Input id="phone" type="tel" defaultValue={userData?.phoneNumber || ''} />
                   </div>
                 </CardContent>
                 <CardFooter>
@@ -162,21 +164,6 @@ export default function Setting() {
                   <CardDescription>Manage your connected bank accounts via Plaid or Decision Logic</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Building className="h-4 w-4" />
-                      <span>Chase Business Checking (...1234)</span>
-                    </div>
-                    <Button variant="outline" size="sm">Disconnect</Button>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Building className="h-4 w-4" />
-                      <span>Wells Fargo Savings (...5678)</span>
-                    </div>
-                    <Button variant="outline" size="sm">Disconnect</Button>
-                  </div>*/}
                   <PlaidConnectAccount />
                   <PlaidConnectButton />
                 </CardContent>

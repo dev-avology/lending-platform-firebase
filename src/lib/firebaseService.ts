@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { db } from './firebase';
 import { doc, setDoc, updateDoc, deleteDoc, serverTimestamp, writeBatch, getDocs, collection, query, where, getDoc, WhereFilterOp, CollectionReference, DocumentData, Query } from 'firebase/firestore';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Firebase Firestore service for handling CRUD operations
@@ -8,17 +9,19 @@ import { doc, setDoc, updateDoc, deleteDoc, serverTimestamp, writeBatch, getDocs
 
 export const firebaseService = {
 
-/**
-   * Fetch all documents from a Firestore collection.
-   * @param collectionPath - Path to the Firestore collection.
-   * @param conditions - Optional conditions to filter the query.
-   * @returns An array of documents.
-   */
-getCollection: async (
+  /**
+     * Fetch all documents from a Firestore collection.
+     * @param collectionPath - Path to the Firestore collection.
+     * @param conditions - Optional conditions to filter the query.
+     * @returns An array of documents.
+     */
+  getCollection: async (
     collectionPath: string,
     conditions?: Array<[string, WhereFilterOp, any]>
   ): Promise<any[]> => {
     try {
+
+
       const collectionRef: CollectionReference<DocumentData> = collection(db, collectionPath);
       let collectionQuery: Query<DocumentData> = collectionRef;
 
@@ -96,6 +99,7 @@ getCollection: async (
     try {
       const docRef = doc(db, collectionPath, docId);
       await updateDoc(docRef, data);
+      console.log('Error updating document:',data);
       return docRef;
     } catch (error) {
       console.log('Error updating document:', error);
@@ -120,46 +124,54 @@ getCollection: async (
     }
   },
 
-    /**
+  /**
    * Bulk create documents in a Firestore collection using batch operations.
    * @param collectionPath - Path to the Firestore collection.
    * @param data - Array of data to insert.
+   * @param conditionField - Field to check for uniqueness.
    * @returns A promise that resolves when the batch is committed.
    */
-    bulkCreate: async (collectionPath: string, data: Record<string, any>[]) => {
-        try {
-          const batch = writeBatch(db);
-    
-          for (const item of data) {
-            // Query Firestore to check if a document with the same account_id exists
-            const accountQuery = query(
-              collection(db, collectionPath),
-              where('persistent_id', '==', item.persistent_id)
-            );
-            const querySnapshot = await getDocs(accountQuery);
-    
-            // Only add the document if no existing document is found
-            if (querySnapshot.empty) {
-              const docRef = doc(
-                db,
-                collectionPath,
-                `${item.id}` // Optionally, use a custom ID generator
-              );
-              batch.set(docRef, {
-                ...item,
-                createdAt: serverTimestamp(),
-              });
-            } else {
-              console.log(`Skipping document for account_id: ${item.account_id}, already exists.`);
-            }
-          }
-    
-          // Commit the batch
-          await batch.commit();
-          console.log(`${data.length} documents processed in ${collectionPath}`);
-        } catch (error) {
-          console.error('Error in bulk create:', error);
-          throw new Error('Error creating documents in bulk');
+  bulkCreate: async (
+    collectionPath: string,
+    data: Record<string, any>[],
+    conditionField: string
+  ): Promise<void> => {
+    if (!data.length) {
+      console.log('No data to process.');
+      return;
+    }
+
+    try {
+      const batch = writeBatch(db);
+
+      for (const item of data) {
+        // Dynamically query Firestore to check for existing documents
+        const querySnapshot = await getDocs(
+          query(collection(db, collectionPath), where(conditionField, '==', item[conditionField]))
+        );
+
+        // Add the document if no existing document matches the condition
+        if (querySnapshot.empty) {
+          const docRef = doc(db, collectionPath, item.id || uuidv4()); // Use `item.id` or a generated UUID
+          batch.set(docRef, {
+            ...item,
+            createdAt: serverTimestamp(),
+          });
+        } else {
+          console.log(
+            `Skipping document with ${conditionField}: ${item[conditionField]}, already exists.`
+          );
         }
-      },
+      }
+
+      // Commit the batch
+      await batch.commit();
+      console.log(`Processed ${data.length} documents in collection: ${collectionPath}`);
+    } catch (error) {
+      console.error('Error in bulkCreate:', error);
+      throw new Error('Failed to create documents in bulk');
+    }
+  },
 };
+
+

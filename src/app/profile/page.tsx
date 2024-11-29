@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 export default function Profile() {
   const { user, loading: authLoading } = useAuth();
-  const { userData, loading: userLoading } = useUser();
+  const { userData, loading: userLoading ,setUserData} = useUser();
   const router = useRouter();
   const [avatar] = useState("/placeholder.svg?height=100&width=100");
 
@@ -78,6 +78,7 @@ export default function Profile() {
     e.preventDefault();
     try {
       await updateUserProfile(formData);
+      setUserData(formData);
       alert("Profile updated successfully!");
     } catch (error) {
       console.log("Error updating profile:", error);
