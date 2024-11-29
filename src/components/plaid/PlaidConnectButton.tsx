@@ -33,22 +33,8 @@ const PlaidConnectButton: React.FC = () => {
       if (!user) return;
 
       try {
-        const response = await fetch('https://createlinktokencent-wdlskx222a-uc.a.run.app', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                userId: user.uid, // Pass user_id in request body
-                clientName:`Loan App`,
-            }),
-          });
-  
-          if (!response.ok) {
-            throw new Error('Failed to fetch link token');
-          } 
+        const data: LinkTokenResponse =  await apiClient.post('https://createlinktokencent-wdlskx222a-uc.a.run.app', {userId: user.uid,clientName:`Loan App`});
 
-        const data: LinkTokenResponse = await response.json();
         setLinkToken(data.link_token);
 
       } catch (error) {
@@ -63,27 +49,17 @@ const PlaidConnectButton: React.FC = () => {
   const handleSuccess = async (publicToken: string, metadata: PlaidLinkOnSuccessMetadata) => {
     const institutionName = metadata.institution?.name || 'Unknown Institution';
     
-    console.log('Bank Linked:', institutionName);
-    console.log('Bank Linked:', metadata);
-
-    console.log('Public Token:', publicToken);
-
     if (!user) return;
     try {
-
+      
         const response: ExchangeTokenResponse = await apiClient.post('https://exchangetokencent-wdlskx222a-uc.a.run.app', { publicToken:publicToken,clientUserId:user.uid});
-
-        console.log('Exchange Data:',response);
-
 
         const response1: AccountResponse = await apiClient.post('/api/plaid/getAccountDetails', { accessToken:response.access_token,itemId:response.item_id,userId:user.uid});
 
-        console.log('Exchange Data:',response1);
 
         if (response1.accounts.length) {
           // Prepare the bulk data for Firestore
           const accounts = response1.accounts;
-          console.log('accounts',accounts);
 
           const bulkData = accounts.map((account: {account_id:string, persistent_account_id:string, name: string; mask: string; }) => ({
               id:account.account_id,
@@ -96,8 +72,6 @@ const PlaidConnectButton: React.FC = () => {
               status:true
           }));
           
-          console.log(bulkData);
-
           await firebaseService.bulkCreate(`users/${user.uid}/banks`, bulkData,'persistent_id');
 
           const banks: ConnectedBanks[] = await firebaseService.getCollection(`users/${user.uid}/banks`);
