@@ -85,4 +85,13 @@ export interface Offer {
   stips: Document[]
 }
 
-
+export interface ConnectedBanks {
+  id: string;
+  persistent_id: string;
+  name: string;
+  bank_name: string;
+  mask: string;
+  access_token: string;
+  item_id: string;
+  status: boolean;
+}

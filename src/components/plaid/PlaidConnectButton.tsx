@@ -6,6 +6,7 @@ import { PlaidLinkOnSuccessMetadata } from 'react-plaid-link';
 import { apiClient } from '@/lib/apiClient';
 import { firebaseService } from '@/lib/firebaseService';
 import { useBankAccounts } from '@/contexts/BankAccountsContext';
+import { ConnectedBanks } from '@/types/user';
 
 // Define the response type from the backend
 interface LinkTokenResponse {
@@ -99,7 +100,8 @@ const PlaidConnectButton: React.FC = () => {
 
           await firebaseService.bulkCreate(`users/${user.uid}/banks`, bulkData,'persistent_id');
 
-          setAccounts((prevAccounts) => [...prevAccounts, ...bulkData]);
+          const banks: ConnectedBanks[] = await firebaseService.getCollection(`users/${user.uid}/banks`);
+          setAccounts(banks);
 
       }
 

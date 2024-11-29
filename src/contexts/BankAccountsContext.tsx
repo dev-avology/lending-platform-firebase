@@ -1,16 +1,8 @@
 'use client';
+import { ConnectedBanks } from '@/types/user';
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-interface ConnectedBanks {
-  id: string;
-  persistent_id: string;
-  name: string;
-  bank_name: string;
-  mask: string;
-  access_token: string;
-  item_id: string;
-  status: boolean;
-}
+
 
 interface BankAccountsContextProps {
   accounts: ConnectedBanks[];

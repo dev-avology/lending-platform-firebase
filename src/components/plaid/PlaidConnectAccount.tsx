@@ -6,17 +6,9 @@ import { Button } from '../ui/button';
 import { Building } from 'lucide-react';
 import { firebaseService } from '@/lib/firebaseService';
 import { useBankAccounts } from '@/contexts/BankAccountsContext';
+import { ConnectedBanks } from '@/types/user';
 
-interface ConnectedBanks {
-  id: string;
-  persistent_id: string;
-  name: string;
-  bank_name: string;
-  mask: string;
-  access_token: string;
-  item_id: string;
-  status: boolean;
-}
+
 
 const PlaidConnectAccount: React.FC = () => {
   const { user, loading } = useAuth();
@@ -95,7 +87,7 @@ const PlaidConnectAccount: React.FC = () => {
   async function handleConnect(id: string) {
     // TODO: Implement disconnect logic
     if (!user) return;
-    
+
      await firebaseService.update(`users/${user.uid}/banks`,id,{status:true});
      fetchAccounts();
 
