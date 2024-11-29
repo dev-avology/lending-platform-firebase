@@ -22,6 +22,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { UploadDocumentsModal } from '../loan-status/UploadDocumentsModal'
+import { useBankAccounts } from '@/contexts/BankAccountsContext'
+import PlaidConnectButton from '@/components/plaid/PlaidConnectButton'
 
 // const creditScoreData = [
 //   { month: 'Jan', score: 620 },
@@ -43,6 +45,7 @@ export default function Dashboard() {
   const { userData } = useUser();
   const { user, loading } = useAuth();
   const router = useRouter();
+  const { accounts } = useBankAccounts();
 
   const [currentApplication, setCurrentApplication] = useState<Application | null>(null);
   const [applicationHistory, setApplicationHistory] = useState<Application[]>([]);
@@ -237,7 +240,8 @@ export default function Dashboard() {
 
   }
 
-
+  console.log(accounts.length)
+  
   return (
     <div className="min-h-screen bg-gray-100">
       <nav className="bg-white shadow-md">
@@ -519,6 +523,8 @@ export default function Dashboard() {
               </Table>
             </CardContent>
           </Card>
+
+          {(accounts.length == 0 )?<PlaidConnectButton autoOpen={true} isVisible={false}/>:<></>}
           </div>
         </div>
       </main>

@@ -1,6 +1,8 @@
 'use client';
 import { ConnectedBanks } from '@/types/user';
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { useAuth } from './AuthContext';
+import { firebaseService } from '@/lib/firebaseService';
 
 
 
@@ -12,7 +14,31 @@ interface BankAccountsContextProps {
 const BankAccountsContext = createContext<BankAccountsContextProps | undefined>(undefined);
 
 export const BankAccountsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [accounts, setAccounts] = useState<ConnectedBanks[]>([]);
+    const { user, loading: authLoading } = useAuth();
+    const [accounts, setAccounts] = useState<ConnectedBanks[]>([]);
+    const [loading, setLoading] = useState(true);
+
+
+  useEffect(() => {
+    const fetchAccountData = async () => {
+      if (!user) {
+        setAccounts([]);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const banks: ConnectedBanks[] = await firebaseService.getCollection(`users/${user.uid}/banks`);
+        setAccounts(banks);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (!loading) fetchAccountData();
+  }, [user, loading,authLoading]);
 
   return (
     <BankAccountsContext.Provider value={{ accounts, setAccounts }}>

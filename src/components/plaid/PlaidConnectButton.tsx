@@ -22,7 +22,13 @@ interface ExchangeTokenResponse {
     accounts: any;
   }
 
-const PlaidConnectButton: React.FC = () => {
+  interface PlaidConnectButtonProps {
+    autoOpen?: boolean; // Optional prop to enable automatic opening
+    isVisible?: boolean; // Optional prop to control button visibility
+}
+
+const PlaidConnectButton: React.FC<PlaidConnectButtonProps> = ({ autoOpen = false, isVisible = true,
+}) => {
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const { user, loading } = useAuth();
   const { setAccounts } = useBankAccounts();
@@ -51,7 +57,7 @@ const PlaidConnectButton: React.FC = () => {
     
     if (!user) return;
     try {
-      
+
         const response: ExchangeTokenResponse = await apiClient.post('https://exchangetokencent-wdlskx222a-uc.a.run.app', { publicToken:publicToken,clientUserId:user.uid});
 
         const response1: AccountResponse = await apiClient.post('/api/plaid/getAccountDetails', { accessToken:response.access_token,itemId:response.item_id,userId:user.uid});
@@ -91,7 +97,7 @@ const PlaidConnectButton: React.FC = () => {
   
   if (!linkToken) return <div>Loading...</div>;
 
-  return <PlaidLinkComponent linkToken={linkToken} onSuccess={handleSuccess} />;
+  return <PlaidLinkComponent linkToken={linkToken} onSuccess={handleSuccess} autoOpen={autoOpen} isVisible={isVisible} />;
 };
 
 export default PlaidConnectButton;

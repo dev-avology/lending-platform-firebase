@@ -6,9 +6,12 @@ import { ChevronRight, Plus } from 'lucide-react';
 interface PlaidLinkComponentProps {
     linkToken: string; // The link token passed from the backend
     onSuccess: PlaidLinkOnSuccess; // Success callback function
+    autoOpen?: boolean; // Optional prop to enable automatic opening
+    isVisible?: boolean; // Optional prop to control button visibility
 }
 
-const PlaidLinkComponent: React.FC<PlaidLinkComponentProps> = ({ linkToken, onSuccess }) => {
+const PlaidLinkComponent: React.FC<PlaidLinkComponentProps> = ({ linkToken, onSuccess, autoOpen = false, isVisible = true,
+}) => {
     const { open, ready } = usePlaidLink({
         token: linkToken,
         onSuccess: (public_token, metadata) => {
@@ -23,8 +26,10 @@ const PlaidLinkComponent: React.FC<PlaidLinkComponentProps> = ({ linkToken, onSu
     });
 
     useEffect(() => {
-        //if (ready) open(); // Automatically open Plaid Link when ready
-    }, [open, ready]);
+        if (autoOpen && ready) {
+            open();
+        }
+    }, [autoOpen, open, ready]);
 
     // Wrap open in a proper event handler
     const handleButtonClick: React.MouseEventHandler<HTMLButtonElement> = () => {
@@ -32,7 +37,7 @@ const PlaidLinkComponent: React.FC<PlaidLinkComponentProps> = ({ linkToken, onSu
     };
 
     return (
-        <Button variant="outline" className="w-full justify-between" onClick={handleButtonClick} disabled={!ready}>
+        <Button variant="outline" className={`w-full justify-between ${isVisible ? '' : 'hidden'}`} onClick={handleButtonClick} disabled={!ready}>
             <span className="flex items-center">
                 <Plus className="mr-2 h-4 w-4" />
                 Connect New Bank Account
