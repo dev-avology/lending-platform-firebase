@@ -134,7 +134,7 @@ export const firebaseService = {
   bulkCreate: async (
     collectionPath: string,
     data: Record<string, any>[],
-    conditionField: string
+    conditionField?: string
   ): Promise<void> => {
     if (!data.length) {
       console.log('No data to process.');
@@ -145,19 +145,24 @@ export const firebaseService = {
       const batch = writeBatch(db);
 
       for (const item of data) {
-        // Dynamically query Firestore to check for existing documents
-        const querySnapshot = await getDocs(
-          query(collection(db, collectionPath), where(conditionField, '==', item[conditionField]))
-        );
+        let shouldAdd = true;
+
+        // Check for existing documents only if a condition field is provided
+        if (conditionField) {
+          const querySnapshot = await getDocs(
+            query(collection(db, collectionPath), where(conditionField, '==', item[conditionField]))
+          );
+          shouldAdd = querySnapshot.empty; // Add the document only if no match is found
+        }
 
         // Add the document if no existing document matches the condition
-        if (querySnapshot.empty) {
+        if (shouldAdd) {
           const docRef = doc(db, collectionPath, item.id || uuidv4()); // Use `item.id` or a generated UUID
           batch.set(docRef, {
             ...item,
             createdAt: serverTimestamp(),
           });
-        } else {
+        } else if (conditionField){
           console.log(
             `Skipping document with ${conditionField}: ${item[conditionField]}, already exists.`
           );
