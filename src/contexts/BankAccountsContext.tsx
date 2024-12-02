@@ -8,6 +8,7 @@ import { firebaseService } from '@/lib/firebaseService';
 
 interface BankAccountsContextProps {
   accounts: ConnectedBanks[];
+  loading:boolean,
   setAccounts: React.Dispatch<React.SetStateAction<ConnectedBanks[]>>;
 }
 
@@ -30,6 +31,7 @@ export const BankAccountsProvider: React.FC<{ children: ReactNode }> = ({ childr
       try {
         const banks: ConnectedBanks[] = await firebaseService.getCollection(`users/${user.uid}/banks`);
         setAccounts(banks);
+
       } catch (error) {
         console.error('Error fetching user data:', error);
       } finally {
@@ -37,11 +39,11 @@ export const BankAccountsProvider: React.FC<{ children: ReactNode }> = ({ childr
       }
     };
 
-    if (!loading) fetchAccountData();
-  }, [user, loading,authLoading]);
+    if (!authLoading) fetchAccountData();
+  }, [user, authLoading]);
 
   return (
-    <BankAccountsContext.Provider value={{ accounts, setAccounts }}>
+    <BankAccountsContext.Provider value={{ accounts,loading, setAccounts }}>
       {children}
     </BankAccountsContext.Provider>
   );

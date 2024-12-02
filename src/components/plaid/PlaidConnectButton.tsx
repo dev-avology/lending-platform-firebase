@@ -36,10 +36,12 @@ const PlaidConnectButton: React.FC<PlaidConnectButtonProps> = ({ autoOpen = fals
   useEffect(() => {
     // Fetch link token from your backend
     const fetchLinkToken = async () => {
-      if (!user) return;
 
       try {
+        if (!user) return;
+
         const data: LinkTokenResponse =  await apiClient.post('https://createlinktokencent-wdlskx222a-uc.a.run.app', {userId: user.uid,clientName:`Loan App`});
+       // const data: LinkTokenResponse =  await apiClient.post('/api/plaid/createLinkToken', {userId: user.uid,clientName:`Loan Local App`});
 
         setLinkToken(data.link_token);
 
@@ -58,7 +60,8 @@ const PlaidConnectButton: React.FC<PlaidConnectButtonProps> = ({ autoOpen = fals
     if (!user) return;
     try {
 
-        const response: ExchangeTokenResponse = await apiClient.post('https://exchangetokencent-wdlskx222a-uc.a.run.app', { publicToken:publicToken,clientUserId:user.uid});
+      const response: ExchangeTokenResponse = await apiClient.post('https://exchangetokencent-wdlskx222a-uc.a.run.app', { publicToken:publicToken,clientUserId:user.uid});
+      //const response: ExchangeTokenResponse = await apiClient.post('/api/plaid/itemExchangeToken', { publicToken:publicToken});
 
         const response1: AccountResponse = await apiClient.post('/api/plaid/getAccountDetails', { accessToken:response.access_token,itemId:response.item_id,userId:user.uid});
 

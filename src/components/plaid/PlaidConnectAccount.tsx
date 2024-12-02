@@ -27,7 +27,6 @@ const PlaidConnectAccount: React.FC = () => {
 
   useEffect(() => {
     // Fetch link token from your backend
-
     fetchAccounts();
   }, [user]);
 

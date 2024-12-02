@@ -22,17 +22,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { UploadDocumentsModal } from '../loan-status/UploadDocumentsModal'
-import { useBankAccounts } from '@/contexts/BankAccountsContext'
-import PlaidConnectButton from '@/components/plaid/PlaidConnectButton'
-
-// const creditScoreData = [
-//   { month: 'Jan', score: 620 },
-//   { month: 'Feb', score: 640 },
-//   { month: 'Mar', score: 655 },
-//   { month: 'Apr', score: 670 },
-//   { month: 'May', score: 685 },
-//   { month: 'Jun', score: 700 },
-// ]
+import AccountsHandler from '@/components/plaid/AccountHandler'
 
 const notifications = [
   { id: 1, message: 'Your loan application has been approved', time: '2 hours ago' },
@@ -45,7 +35,6 @@ export default function Dashboard() {
   const { userData } = useUser();
   const { user, loading } = useAuth();
   const router = useRouter();
-  const { accounts } = useBankAccounts();
 
   const [currentApplication, setCurrentApplication] = useState<Application | null>(null);
   const [applicationHistory, setApplicationHistory] = useState<Application[]>([]);
@@ -116,7 +105,7 @@ export default function Dashboard() {
   }
 
 
-  
+
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
@@ -191,7 +180,7 @@ export default function Dashboard() {
   };
 
 
-  
+
   const handleAcceptOffer = (offer: Offer | null) => {
     if (offer) {
       setSelectedOffer(offer);
@@ -240,18 +229,16 @@ export default function Dashboard() {
 
   }
 
-  console.log(accounts.length)
-  
   return (
     <div className="min-h-screen bg-gray-100">
       <nav className="bg-white shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex">
-            <Link href="/dashboard" className="flex-shrink-0 flex items-center mr-8">
-              <span className="sr-only">Your Company</span>
-              <HeaderLogo width={80} height={80} />
-            </Link>
+              <Link href="/dashboard" className="flex-shrink-0 flex items-center mr-8">
+                <span className="sr-only">Your Company</span>
+                <HeaderLogo width={80} height={80} />
+              </Link>
 
               <div className="ml-10 flex items-center space-x-4">
                 <Link href="/dashboard" className="text-gray-900 px-3 py-2 rounded-md text-sm font-medium flex items-center">
@@ -270,8 +257,8 @@ export default function Dashboard() {
             </div>
             <div className="flex items-center space-x-4">
               <div className="relative">
-                <button 
-                  className="text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-black" 
+                <button
+                  className="text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-black"
                   onClick={toggleNotifications}
                   aria-label="Notifications"
                 >
@@ -296,27 +283,24 @@ export default function Dashboard() {
                   </div>
                 )}
               </div>
-              <p className="text-gray-900 text-sm font-medium">Hello, Dayten</p>
+              <p className="text-gray-900 text-sm font-medium">Hello, {userData?.firstName}</p>
               <div className="relative">
-
-              <Button  onClick={toggleProfile} variant="ghost" className="flex text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-gray-300 transition duration-150 ease-in-out" size="icon">
+                <Button onClick={toggleProfile} variant="ghost" className="flex text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-gray-300 transition duration-150 ease-in-out" size="icon">
                   <UserAvatar imageUrl={userData?.photoURL} size={50} />
                 </Button>
-
-               
                 {isProfileOpen && (
                   <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg">
                     <div className="py-1 bg-white rounded-md shadow-xs">
-                      <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                      <Link href="/profile" className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
                         <User className="mr-3 h-5 w-5 text-gray-400" /> Your Profile
                       </Link>
-                      <Link href="/loan-status" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                      <Link href="/loan-status" className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
                         <CreditCard className="mr-3 h-5 w-5 text-gray-400" /> Loan Status
                       </Link>
-                      <Link href="/setting" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                      <Link href="/setting" className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
                         <Settings className="mr-3 h-5 w-5 text-gray-400" /> Settings
                       </Link>
-                      <Link href="#" onClick={handleSignOut} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                      <Link href="#" onClick={handleSignOut} className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
                         <LogOut className="mr-3 h-5 w-5 text-gray-400" /> Sign out
                       </Link>
                     </div>
@@ -331,7 +315,7 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">Dashboard</h1>
-          
+
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="px-4 py-5 sm:p-6">
@@ -377,154 +361,154 @@ export default function Dashboard() {
 
           <div className="mt-4">
 
-          {currentApplication && <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Current Application</CardTitle>
-              <CardDescription>Status of your most recent loan application</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold">Business Expansion Loan</h3>
-                  <p className="text-sm text-gray-500">Application #{currentApplication.id}</p>
+            {currentApplication && <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>Current Application</CardTitle>
+                <CardDescription>Status of your most recent loan application</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold">Business Expansion Loan</h3>
+                    <p className="text-sm text-gray-500">Application #{currentApplication.id}</p>
+                  </div>
+                  <Badge variant="secondary">In Progress</Badge>
                 </div>
-                <Badge variant="secondary">In Progress</Badge>
-              </div>
-              <Progress value={66} className="mb-2" />
-              <div className="text-sm text-gray-500 mb-4">Application is 66% complete</div>
-              <div className="space-y-2">
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                  <span>Business Information Submitted</span>
+                <Progress value={66} className="mb-2" />
+                <div className="text-sm text-gray-500 mb-4">Application is 66% complete</div>
+                <div className="space-y-2">
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                    <span>Business Information Submitted</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                    <span>Financial Documents Uploaded</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Clock className="h-5 w-5 text-yellow-500 mr-2" />
+                    <span>Application Submitted</span>
+                  </div>
                 </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                  <span>Financial Documents Uploaded</span>
-                </div>
-                <div className="flex items-center">
-                  <Clock className="h-5 w-5 text-yellow-500 mr-2" />
-                  <span>Application Submitted</span>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button>
-                Continue Application
-                <ChevronRight className="h-4 w-4 ml-2" />
-              </Button>
-            </CardFooter>
-          </Card>}
-
-
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Required Documents</CardTitle>
-              <CardDescription>Please ensure all required documents are submitted</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {documents.map((doc) => (
-                  <li key={doc.name} className="flex items-center">
-                    {doc.status === 'uploaded' ? (
-                      <FileCheck className="h-5 w-5 text-green-500 mr-2" />
-                    ) : (
-                      <FileText className="h-5 w-5 text-gray-400 mr-2" />
-                    )}
-                    <span>{doc.name}</span>
-                  </li>
-                ))}
-              </ul>
-
-            </CardContent>
-            <CardFooter>
-              {hasPendingDocuments && (
-                <Button variant="outline" onClick={() => setIsUploadModalOpen(true)}>
-                  Upload Missing Documents
+              </CardContent>
+              <CardFooter>
+                <Button>
+                  Continue Application
                   <ChevronRight className="h-4 w-4 ml-2" />
                 </Button>
-              )}
+              </CardFooter>
+            </Card>}
 
-            </CardFooter>
-          </Card>
 
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Lender Offers</CardTitle>
-              <CardDescription>Current offers for your loan application</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {currentOffers && currentOffers.length > 0 ? (
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>Required Documents</CardTitle>
+                <CardDescription>Please ensure all required documents are submitted</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {documents.map((doc) => (
+                    <li key={doc.name} className="flex items-center">
+                      {doc.status === 'uploaded' ? (
+                        <FileCheck className="h-5 w-5 text-green-500 mr-2" />
+                      ) : (
+                        <FileText className="h-5 w-5 text-gray-400 mr-2" />
+                      )}
+                      <span>{doc.name}</span>
+                    </li>
+                  ))}
+                </ul>
+
+              </CardContent>
+              <CardFooter>
+                {hasPendingDocuments && (
+                  <Button variant="outline" onClick={() => setIsUploadModalOpen(true)}>
+                    Upload Missing Documents
+                    <ChevronRight className="h-4 w-4 ml-2" />
+                  </Button>
+                )}
+
+              </CardFooter>
+            </Card>
+
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>Lender Offers</CardTitle>
+                <CardDescription>Current offers for your loan application</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {currentOffers && currentOffers.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Lender</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Interest Rate</TableHead>
+                        <TableHead>Term</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {currentOffers.map((offer, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{offer.lender}</TableCell>
+                          <TableCell>${offer.amount.toLocaleString()}</TableCell>
+                          <TableCell>{offer.rate}</TableCell>
+                          <TableCell>{offer.term}</TableCell>
+                          <TableCell>{getStatusBadge(offer.status)}</TableCell>
+                          <TableCell>
+                            <Button size="sm" onClick={() => handleAcceptOffer(offer)}>
+                              View Details
+                              <ChevronRight className="h-4 w-4 ml-2" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <p>${`No offers available yet. We'll notify you when lenders respond to your application.`}</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Application History</CardTitle>
+                <CardDescription>Your past loan applications and their outcomes</CardDescription>
+              </CardHeader>
+              <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>#ID</TableHead>
                       <TableHead>Lender</TableHead>
+                      <TableHead>Submission Date</TableHead>
                       <TableHead>Amount</TableHead>
-                      <TableHead>Interest Rate</TableHead>
-                      <TableHead>Term</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {currentOffers.map((offer, index) => (
+                    {applicationHistory.map((application, index) => (
                       <TableRow key={index}>
-                        <TableCell>{offer.lender}</TableCell>
-                        <TableCell>${offer.amount.toLocaleString()}</TableCell>
-                        <TableCell>{offer.rate}</TableCell>
-                        <TableCell>{offer.term}</TableCell>
-                        <TableCell>{getStatusBadge(offer.status)}</TableCell>
+                        <TableCell>#{application.id}</TableCell>
+                        <TableCell>{application.legalName}</TableCell>
+                        <TableCell>{application.submissionDate?.toDate().toLocaleDateString()}</TableCell>
+                        <TableCell>${application.loanAmount.toLocaleString()}</TableCell>
                         <TableCell>
-                          <Button size="sm" onClick={() => handleAcceptOffer(offer)}>
-                            View Details
-                            <ChevronRight className="h-4 w-4 ml-2" />
-                          </Button>
+                          <Badge variant={application.status === "Approved" ? "success" : "destructive"}>
+                            {application.status}
+                          </Badge>
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
-              ) : (
-                <p>${`No offers available yet. We'll notify you when lenders respond to your application.`}</p>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+            <AccountsHandler></AccountsHandler>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Application History</CardTitle>
-              <CardDescription>Your past loan applications and their outcomes</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>#ID</TableHead>
-                    <TableHead>Lender</TableHead>
-                    <TableHead>Submission Date</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {applicationHistory.map((application, index) => (
-                    <TableRow key={index}>
-                      <TableCell>#{application.id}</TableCell>
-                      <TableCell>{application.legalName}</TableCell>
-                      <TableCell>{application.submissionDate?.toDate().toLocaleDateString()}</TableCell>
-                      <TableCell>${application.loanAmount.toLocaleString()}</TableCell>
-                      <TableCell>
-                        <Badge variant={application.status === "Approved" ? "success" : "destructive"}>
-                          {application.status}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-
-          {(accounts.length == 0 )?<PlaidConnectButton autoOpen={true} isVisible={false}/>:<></>}
           </div>
         </div>
       </main>
