@@ -5,6 +5,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { UserProvider } from '@/contexts/UserContext'
 
 import { BankAccountsProvider } from '@/contexts/BankAccountsContext';
+import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -28,6 +29,7 @@ export default function RootLayout({
             </BankAccountsProvider>
           </UserProvider>
         </AuthProvider>
+        <Toaster />
       </body>
     </html>
   );

@@ -13,6 +13,7 @@ import { DashboardBack } from '@/components/dashboard-back';
 import PlaidConnectButton from '@/components/plaid/PlaidConnectButton';
 import PlaidConnectAccount from '@/components/plaid/PlaidConnectAccount';
 import { useUser } from '@/contexts/UserContext';
+import ChangePassword from '@/components/change-password';
 
 export default function Setting() {
   const { user, loading } = useAuth();
@@ -111,13 +112,7 @@ export default function Setting() {
                     </div>
                     <Switch id="two-factor" />
                   </div>
-                  <Button variant="outline" className="w-full justify-between">
-                    <span className="flex items-center">
-                      <Lock className="mr-2 h-4 w-4" />
-                      Change Password
-                    </span>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+                  <ChangePassword></ChangePassword>
                 </CardContent>
               </Card>
   
