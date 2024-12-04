@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { signInWithPopup } from 'firebase/auth'
-import { db,auth, googleProvider, signInWithGoogle } from '@/lib/firebase'
+import { db, signInWithGoogle } from '@/lib/firebase'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { GoogleIcon } from '../icons/GoogleIcon'
@@ -38,10 +37,6 @@ export function GoogleAuthButton() {
         // Save user data to Firestore
         await setDoc(doc(db, 'users', user.uid), userData)
         console.log("User data saved to Firestore")
-
-      } else {
-
-        
       }
 
 

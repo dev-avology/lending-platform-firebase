@@ -475,7 +475,7 @@ export default function Dashboard() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Application History</CardTitle>
+                <CardTitle>History</CardTitle>
                 <CardDescription>Your past loan applications and their outcomes</CardDescription>
               </CardHeader>
               <CardContent>

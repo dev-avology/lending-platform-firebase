@@ -3,13 +3,12 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Bell, Lock, CreditCard, User, HelpCircle, ChevronRight } from 'lucide-react'
+import { Bell, Lock, User, HelpCircle, ChevronRight } from 'lucide-react'
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DashboardBack } from '@/components/dashboard-back';
 import PlaidConnectButton from '@/components/plaid/PlaidConnectButton';
 import PlaidConnectAccount from '@/components/plaid/PlaidConnectAccount';
@@ -53,19 +52,19 @@ export default function Setting() {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Full Name</Label>
-                    <Input id="name" defaultValue={`${userData?.firstName || ''} ${userData?.lastName || ''}`.trim()} />
+                    <Input id="name" defaultValue={`${userData?.firstName || ''} ${userData?.lastName || ''}`.trim()} disabled={true}/>
                     </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address</Label>
-                    <Input id="email" type="email" defaultValue={userData?.email || ''} />
+                    <Input id="email" type="email" defaultValue={userData?.email || ''} disabled={true}/>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" type="tel" defaultValue={userData?.phoneNumber || ''} />
+                    <Input id="phone" type="tel" defaultValue={userData?.phoneNumber || ''} disabled={true}/>
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button>Save Changes</Button>
+                  {/* <Button>Save Changes</Button> */}
                 </CardFooter>
               </Card>
   
@@ -122,41 +121,6 @@ export default function Setting() {
                 </CardContent>
               </Card>
   
-              <Card>
-                <CardHeader>
-                  <CardTitle>Billing</CardTitle>
-                  <CardDescription>Manage your billing information and subscriptions</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <CreditCard className="h-4 w-4" />
-                      <span>Current Plan: Business Pro</span>
-                    </div>
-                    <Button variant="outline" size="sm">Upgrade</Button>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="payment-method">Payment Method</Label>
-                    <Select defaultValue="visa">
-                      <SelectTrigger id="payment-method">
-                        <SelectValue placeholder="Select a payment method" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="visa">Visa ending in 1234</SelectItem>
-                        <SelectItem value="mastercard">Mastercard ending in 5678</SelectItem>
-                        <SelectItem value="amex">American Express ending in 9012</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button variant="outline" className="w-full justify-between">
-                    <span className="flex items-center">
-                      <CreditCard className="mr-2 h-4 w-4" />
-                      Update Billing Information
-                    </span>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </CardContent>
-              </Card>
   
               <Card>
                 <CardHeader>
