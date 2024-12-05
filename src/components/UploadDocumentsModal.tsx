@@ -1,6 +1,6 @@
 'use client';
 import React from 'react'
-import { X, Upload, FileText, CheckCircle } from 'lucide-react'
+import { Upload, FileText, CheckCircle } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Progress } from "@/components/ui/progress"

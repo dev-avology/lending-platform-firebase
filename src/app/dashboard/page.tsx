@@ -323,7 +323,7 @@ export default function Dashboard() {
                   Current Loan Balance
                 </dt>
                 <dd className="mt-1 text-3xl font-semibold text-gray-900">
-                  $245,000
+                  $0
                 </dd>
               </div>
             </div>
@@ -334,9 +334,9 @@ export default function Dashboard() {
                   Line of Credit
                 </dt>
                 <dd className="mt-1 text-3xl font-semibold text-gray-900">
-                  $50,000
+                  $0
                 </dd>
-                <p className="mt-2 text-sm text-gray-500">Available: $30,000</p>
+                <p className="mt-2 text-sm text-gray-500">Available: $0</p>
               </div>
             </div>
 
@@ -346,7 +346,7 @@ export default function Dashboard() {
                   Term Loan
                 </dt>
                 <dd className="mt-1 text-3xl font-semibold text-gray-900">
-                  $195,000
+                  $0
                 </dd>
                 <p className="mt-2 text-sm text-gray-500">5-year term</p>
               </div>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 import React, { useEffect } from 'react'
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
@@ -14,35 +15,51 @@ export default function Financial() {
   const router = useRouter();
 
   // Mock data for financial metrics
+  // const financialMetrics = {
+  //   averageDailyBalance: 15000,
+  //   averageMonthlyDeposits: 50000,
+  //   averageMonthlyExpenses: 45000,
+  //   negativeDays: 3,
+  //   cashFlow: 5000,
+  //   projectedCashFlow: 7000,
+  // }
+
   const financialMetrics = {
-    averageDailyBalance: 15000,
-    averageMonthlyDeposits: 50000,
-    averageMonthlyExpenses: 45000,
-    negativeDays: 3,
-    cashFlow: 5000,
-    projectedCashFlow: 7000,
+    averageDailyBalance: 0,
+    averageMonthlyDeposits: 0,
+    averageMonthlyExpenses: 0,
+    negativeDays: 0,
+    cashFlow: 0,
+    projectedCashFlow: 0,
   }
 
   // Mock data for daily balance chart
-  const dailyBalanceData = [
-    { date: '2023-06-01', balance: 12000 },
-    { date: '2023-06-02', balance: 13500 },
-    { date: '2023-06-03', balance: 15000 },
-    { date: '2023-06-04', balance: 14000 },
-    { date: '2023-06-05', balance: 16000 },
-    { date: '2023-06-06', balance: 15500 },
-    { date: '2023-06-07', balance: 17000 },
-  ]
+  // const dailyBalanceData = [
+  //   { date: '2023-06-01', balance: 12000 },
+  //   { date: '2023-06-02', balance: 13500 },
+  //   { date: '2023-06-03', balance: 15000 },
+  //   { date: '2023-06-04', balance: 14000 },
+  //   { date: '2023-06-05', balance: 16000 },
+  //   { date: '2023-06-06', balance: 15500 },
+  //   { date: '2023-06-07', balance: 17000 },
+  // ]
+
+
+  const dailyBalanceData: any[] | undefined = []
 
   // Mock data for income vs expenses chart
-  const incomeVsExpensesData = [
-    { month: 'Jan', income: 48000, expenses: 42000 },
-    { month: 'Feb', income: 52000, expenses: 45000 },
-    { month: 'Mar', income: 50000, expenses: 47000 },
-    { month: 'Apr', income: 55000, expenses: 48000 },
-    { month: 'May', income: 53000, expenses: 46000 },
-    { month: 'Jun', income: 51000, expenses: 44000 },
-  ]
+  // const incomeVsExpensesData = [
+  //   { month: 'Jan', income: 48000, expenses: 42000 },
+  //   { month: 'Feb', income: 52000, expenses: 45000 },
+  //   { month: 'Mar', income: 50000, expenses: 47000 },
+  //   { month: 'Apr', income: 55000, expenses: 48000 },
+  //   { month: 'May', income: 53000, expenses: 46000 },
+  //   { month: 'Jun', income: 51000, expenses: 44000 },
+  // ]
+
+  const incomeVsExpensesData: any[] | undefined = []
+
+
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
@@ -204,19 +221,19 @@ export default function Financial() {
               <dl>
                 <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                   <dt className="text-sm font-medium text-gray-500">Current Ratio</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">1.5</dd>
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">0</dd>
                 </div>
                 <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                   <dt className="text-sm font-medium text-gray-500">Debt-to-Equity Ratio</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">0.8</dd>
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">0</dd>
                 </div>
                 <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                   <dt className="text-sm font-medium text-gray-500">Profit Margin</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">15%</dd>
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">0%</dd>
                 </div>
                 <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                   <dt className="text-sm font-medium text-gray-500">Inventory Turnover</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">6.2</dd>
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">0</dd>
                 </div>
               </dl>
             </div>

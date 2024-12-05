@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,30 +14,37 @@ export default function Loan() {
   const router = useRouter();
 
   // Mock data for loans
-  const loans = [
-    { id: 1, type: 'Term Loan', amount: 195000, interestRate: 5.5, term: '5 years', nextPayment: '2023-07-15' },
-    { id: 2, type: 'Line of Credit', amount: 50000, interestRate: 7.0, available: 30000, nextPayment: '2023-07-20' },
-  ]
+  const loans: any[] = []
+
+  // const loans = [
+  //   { id: 1, type: 'Term Loan', amount: 195000, interestRate: 5.5, term: '5 years', nextPayment: '2023-07-15' },
+  //   { id: 2, type: 'Line of Credit', amount: 50000, interestRate: 7.0, available: 30000, nextPayment: '2023-07-20' },
+  // ]
 
   // Mock data for payment history
-  const paymentHistory = [
-    { date: '2023-06-15', amount: 3500, type: 'Payment' },
-    { date: '2023-05-15', amount: 3500, type: 'Payment' },
-    { date: '2023-04-15', amount: 3500, type: 'Payment' },
-    { date: '2023-03-15', amount: 3500, type: 'Payment' },
-    { date: '2023-02-15', amount: 3500, type: 'Payment' },
-    { date: '2023-01-15', amount: 3500, type: 'Payment' },
-  ]
+  // const paymentHistory = [
+  //   { date: '2023-06-15', amount: 3500, type: 'Payment' },
+  //   { date: '2023-05-15', amount: 3500, type: 'Payment' },
+  //   { date: '2023-04-15', amount: 3500, type: 'Payment' },
+  //   { date: '2023-03-15', amount: 3500, type: 'Payment' },
+  //   { date: '2023-02-15', amount: 3500, type: 'Payment' },
+  //   { date: '2023-01-15', amount: 3500, type: 'Payment' },
+  // ]
+
+  const paymentHistory: any[] = []
 
   // Mock data for payment chart
-  const paymentChartData = [
-    { month: 'Jan', payment: 3500 },
-    { month: 'Feb', payment: 3500 },
-    { month: 'Mar', payment: 3500 },
-    { month: 'Apr', payment: 3500 },
-    { month: 'May', payment: 3500 },
-    { month: 'Jun', payment: 3500 },
-  ]
+  // const paymentChartData = [
+  //   { month: 'Jan', payment: 3500 },
+  //   { month: 'Feb', payment: 3500 },
+  //   { month: 'Mar', payment: 3500 },
+  //   { month: 'Apr', payment: 3500 },
+  //   { month: 'May', payment: 3500 },
+  //   { month: 'Jun', payment: 3500 },
+  // ]
+
+
+  const paymentChartData: any[] | undefined = []
 
   const [activeTab, setActiveTab] = useState('overview')
 

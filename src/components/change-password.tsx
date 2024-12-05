@@ -1,7 +1,8 @@
-'use client'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+'use client';
 
-import { useState } from 'react'
-import { Button } from "@/components/ui/button"
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -10,123 +11,178 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useToast } from "@/hooks/use-toast"
-import { Lock,ChevronRight } from 'lucide-react'
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Lock, ChevronRight } from 'lucide-react';
+import { EmailAuthProvider,  reauthenticateWithCredential, updatePassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { toast } from '@/hooks/use-toast';
+
+interface FormData {
+  email: string;
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
 
 export default function ChangePassword() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const { toast } = useToast()
+  const [isOpen, setIsOpen] = useState(false);
+  const [formData, setFormData] = useState<FormData>({
+    email: '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [isLoginRequired, setIsLoginRequired] = useState(false);
+  const [hasPasswordProvider, setHasPasswordProvider] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  useEffect(() => {
+    const checkProviders = () => {
+      const hasPasswordProvider = auth.currentUser?.providerData.some(
+        (provider) => provider.providerId === "password"
+      ) || false; // Ensure it defaults to false
+      setHasPasswordProvider(hasPasswordProvider);
+    };
 
-    // Basic validation
+      checkProviders();
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const validateForm = (): boolean => {
+    const { newPassword, confirmPassword } = formData;
     if (newPassword !== confirmPassword) {
       toast({
-        title: "Error",
-        description: "New passwords do not match.",
-        variant: "destructive",
-      })
-      return
+        title: 'Error',
+        description: 'New passwords do not match.',
+        variant: 'destructive',
+      });
+      return false;
     }
-
     if (newPassword.length < 8) {
       toast({
-        title: "Error",
-        description: "New password must be at least 8 characters long.",
-        variant: "destructive",
-      })
-      return
+        title: 'Error',
+        description: 'Password must be at least 8 characters.',
+        variant: 'destructive',
+      });
+      return false;
     }
+    return true;
+  };
 
-    // Simulated password change function
-    // In a real application, you would call an API endpoint here
-    await new Promise(resolve => setTimeout(resolve, 1000))
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
 
-    toast({
-      title: "Success",
-      description: "Your password has been changed successfully.",
-    })
+    try {
+      const currentUser = auth.currentUser;
 
-    // Reset form and close modal
-    setCurrentPassword('')
-    setNewPassword('')
-    setConfirmPassword('')
-    setIsOpen(false)
-  }
+      if (!currentUser) {
+        toast({
+          title: 'Error',
+          description: 'No user is signed in.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (isLoginRequired) {
+        const credential = EmailAuthProvider.credential(formData.email, formData.currentPassword);
+        await reauthenticateWithCredential(currentUser, credential);
+      }
+
+      await updatePassword(currentUser, formData.newPassword);
+      toast({
+        title: 'Success',
+        description: 'Password updated successfully.',
+      });
+      setIsOpen(false);
+    } catch (error: any) {
+      if (error.code === 'auth/requires-recent-login') {
+        setIsLoginRequired(true);
+      }
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update password.',
+        variant: 'destructive',
+      });
+    } finally {
+      setFormData({
+        email: '',
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+    }
+  };
+
+  if (!hasPasswordProvider) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) setIsLoginRequired(false); }}>
       <DialogTrigger asChild>
         <Button variant="outline" className="w-full justify-between">
-                    <span className="flex items-center">
-                      <Lock className="mr-2 h-4 w-4" />
-                      Change Password
-                    </span>
-                    <ChevronRight className="h-4 w-4" />
+          <span className="flex items-center">
+            <Lock className="mr-2 h-4 w-4" />
+            Change Password
+          </span>
+          <ChevronRight className="h-4 w-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Change password</DialogTitle>
+          <DialogTitle>Change Password</DialogTitle>
           <DialogDescription>
-            Enter your current password and a new password to change your account password.
+            Enter your current password and new password to update.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="current-password" className="text-right">
-                Current
-              </Label>
-              <Input
-                id="current-password"
-                type="password"
-                className="col-span-3"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="new-password" className="text-right">
-                New
-              </Label>
-              <Input
-                id="new-password"
-                type="password"
-                className="col-span-3"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="confirm-password" className="text-right">
-                Confirm
-              </Label>
-              <Input
-                id="confirm-password"
-                type="password"
-                className="col-span-3"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-            </div>
+          <div className="grid gap-4">
+            {isLoginRequired && (
+              <>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                />
+                <Input
+                  id="currentPassword"
+                  type="password"
+                  placeholder="Current password"
+                  value={formData.currentPassword}
+                  onChange={handleInputChange}
+                  required
+                />
+              </>
+            )}
+            <Input
+              id="newPassword"
+              type="password"
+              placeholder="New password"
+              value={formData.newPassword}
+              onChange={handleInputChange}
+              required
+            />
+            <Input
+              id="confirmPassword"
+              type="password"
+              placeholder="Confirm new password"
+              value={formData.confirmPassword}
+              onChange={handleInputChange}
+              required
+            />
           </div>
           <DialogFooter>
-            <Button type="submit">Save changes</Button>
+          <div className="grid gap-4"><Button type="submit" className='mt-5'>Save Changes</Button></div>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-

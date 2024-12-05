@@ -6,7 +6,7 @@ import {
 import { 
   getAuth, GoogleAuthProvider, signInWithPopup, 
   createUserWithEmailAndPassword, signInWithEmailAndPassword, 
-  sendPasswordResetEmail, signOut, UserCredential 
+  sendPasswordResetEmail, signOut, UserCredential
 } from "firebase/auth";
 import { 
   getFirestore, doc, setDoc, collection, addDoc, 
@@ -41,15 +41,16 @@ export const signInWithGoogle = (): Promise<UserCredential> => signInWithPopup(a
 export const recoverPassword = (email: string): Promise<void> => 
   sendPasswordResetEmail(auth, email);
 
-/** Firestore Operations */
-const saveDocument = async (path: string, data: object) => {
-  try {
-    await setDoc(doc(db, path), data);
-    console.log(`Document saved to path: ${path}`);
-  } catch (error) {
-    console.error(`Error saving document at ${path}:`, error);
-  }
+  /** Firestore Operations */
+  const saveDocument = async (path: string, data: object) => {
+    try {
+      await setDoc(doc(db, path), data);
+      console.log(`Document saved to path: ${path}`);
+    } catch (error) {
+      console.error(`Error saving document at ${path}:`, error);
+    }
 };
+
 
 export const saveUserData = async (userId: string, formData: UserData) => {
   const data = { ...formData, createdAt: Timestamp.now(), registrationComplete: true };
