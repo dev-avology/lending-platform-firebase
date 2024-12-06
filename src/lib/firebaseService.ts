@@ -1,46 +1,86 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { db } from './firebase';
-import { doc, setDoc, updateDoc, deleteDoc, serverTimestamp, writeBatch, getDocs, collection, query, where, getDoc, WhereFilterOp, CollectionReference, DocumentData, Query } from 'firebase/firestore';
+import {
+  doc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp,
+  writeBatch,
+  getDocs,
+  collection,
+  query,
+  where,
+  getDoc,
+  CollectionReference,
+  DocumentData,
+  Query,
+  WhereFilterOp,
+} from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Firebase Firestore service for handling CRUD operations
  */
-
 export const firebaseService = {
-
   /**
-     * Fetch all documents from a Firestore collection.
-     * @param collectionPath - Path to the Firestore collection.
-     * @param conditions - Optional conditions to filter the query.
-     * @returns An array of documents.
-     */
+   * Fetch all documents from a Firestore collection.
+   * @param collectionPath - Path to the Firestore collection.
+   * @param conditions - Optional conditions to filter the query.
+   * @returns An array of documents.
+   */
   getCollection: async (
     collectionPath: string,
     conditions?: Array<[string, WhereFilterOp, any]>
   ): Promise<any[]> => {
     try {
-
-
       const collectionRef: CollectionReference<DocumentData> = collection(db, collectionPath);
-      let collectionQuery: Query<DocumentData> = collectionRef;
-
-      // Apply conditions if provided
-      if (conditions) {
-        const filters = conditions.map(([field, op, value]) => where(field, op, value));
-        collectionQuery = query(collectionRef, ...filters);
-      }
+      const filters = conditions?.map(([field, op, value]) => where(field, op, value)) || [];
+      const collectionQuery: Query<DocumentData> = filters.length
+        ? query(collectionRef, ...filters)
+        : collectionRef;
 
       const querySnapshot = await getDocs(collectionQuery);
-      const data = querySnapshot.docs.map(doc => ({
+
+      return querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
-
-      return data;
     } catch (error) {
       console.error('Error fetching collection:', error);
       throw new Error('Error fetching collection');
+    }
+  },
+
+  /**
+   * Fetch a single document from a Firestore collection based on conditions.
+   * @param collectionPath - Path to the Firestore collection.
+   * @param conditions - Array of conditions [field, operator, value].
+   * @returns The document data or null if no document matches.
+   */
+  getRecordByCondition: async (
+    collectionPath: string,
+    conditions: Array<[string, WhereFilterOp, any]>
+  ): Promise<any | null> => {
+    try {
+      const collectionRef = collection(db, collectionPath);
+      const queryRef = conditions.reduce(
+        (q, [field, operator, value]) => query(q, where(field, operator, value)),
+        query(collectionRef)
+      );
+
+      const querySnapshot = await getDocs(queryRef);
+
+      if (querySnapshot.empty) {
+        console.log(`No document matches the conditions in ${collectionPath}`);
+        return null;
+      }
+
+      const doc = querySnapshot.docs[0];
+      return { id: doc.id, ...doc.data() };
+    } catch (error) {
+      console.error('Error fetching record:', error);
+      throw new Error('Error fetching record based on conditions');
     }
   },
 
@@ -50,7 +90,7 @@ export const firebaseService = {
    * @param docId - Document ID to fetch.
    * @returns The document data or null if not found.
    */
-  getRecord: async (collectionPath: string, docId: string) => {
+  getRecord: async (collectionPath: string, docId: string): Promise<any | null> => {
     try {
       const docRef = doc(db, collectionPath, docId);
       const docSnapshot = await getDoc(docRef);
@@ -67,23 +107,22 @@ export const firebaseService = {
     }
   },
 
-
-
   /**
    * Create a new document in a Firestore collection.
    * @param collectionPath - Path to the Firestore collection.
    * @param data - The data to store in the document.
    * @returns The created document reference.
    */
-  create: async (collectionPath: string, data: Record<string, any>) => {
+  create: async (collectionPath: string, data: Record<string, any>): Promise<void> => {
     try {
-      const docRef = await setDoc(doc(db, collectionPath), {
+      const docId = uuidv4();
+      await setDoc(doc(db, collectionPath, docId), {
         ...data,
         createdAt: serverTimestamp(),
       });
-      return docRef;
+      console.log('Document created with ID:', docId);
     } catch (error) {
-      console.log('Error creating document:', error);
+      console.error('Error creating document:', error);
       throw new Error('Error creating document');
     }
   },
@@ -95,14 +134,13 @@ export const firebaseService = {
    * @param data - The data to update in the document.
    * @returns The updated document reference.
    */
-  update: async (collectionPath: string, docId: string, data: Record<string, any>) => {
+  update: async (collectionPath: string, docId: string, data: Record<string, any>): Promise<void> => {
     try {
       const docRef = doc(db, collectionPath, docId);
       await updateDoc(docRef, data);
-      console.log('Error updating document:',data);
-      return docRef;
+      console.log('Document updated:', docId);
     } catch (error) {
-      console.log('Error updating document:', error);
+      console.error('Error updating document:', error);
       throw new Error('Error updating document');
     }
   },
@@ -113,13 +151,13 @@ export const firebaseService = {
    * @param docId - Document ID to delete.
    * @returns A promise indicating the result of the deletion.
    */
-  delete: async (collectionPath: string, docId: string) => {
+  delete: async (collectionPath: string, docId: string): Promise<void> => {
     try {
       const docRef = doc(db, collectionPath, docId);
       await deleteDoc(docRef);
       console.log(`Document with ID ${docId} deleted successfully`);
     } catch (error) {
-      console.log('Error deleting document:', error);
+      console.error('Error deleting document:', error);
       throw new Error('Error deleting document');
     }
   },
@@ -147,29 +185,23 @@ export const firebaseService = {
       for (const item of data) {
         let shouldAdd = true;
 
-        // Check for existing documents only if a condition field is provided
         if (conditionField) {
           const querySnapshot = await getDocs(
             query(collection(db, collectionPath), where(conditionField, '==', item[conditionField]))
           );
-          shouldAdd = querySnapshot.empty; // Add the document only if no match is found
+          shouldAdd = querySnapshot.empty;
         }
 
-        // Add the document if no existing document matches the condition
         if (shouldAdd) {
-          const docRef = doc(db, collectionPath, item.id || uuidv4()); // Use `item.id` or a generated UUID
-          batch.set(docRef, {
-            ...item,
-            createdAt: serverTimestamp(),
-          });
-        } else if (conditionField){
+          const docRef = doc(db, collectionPath, item.id || uuidv4());
+          batch.set(docRef, { ...item, createdAt: serverTimestamp() });
+        } else {
           console.log(
-            `Skipping document with ${conditionField}: ${item[conditionField]}, already exists.`
+            `Skipping document with ${conditionField}:already exists.`
           );
         }
       }
 
-      // Commit the batch
       await batch.commit();
       console.log(`Processed ${data.length} documents in collection: ${collectionPath}`);
     } catch (error) {
@@ -178,5 +210,3 @@ export const firebaseService = {
     }
   },
 };
-
-

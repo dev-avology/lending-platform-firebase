@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Bell, Lock, User, HelpCircle, ChevronRight } from 'lucide-react'
+import { Bell, User, HelpCircle, ChevronRight } from 'lucide-react'
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -14,6 +14,7 @@ import PlaidConnectButton from '@/components/plaid/PlaidConnectButton';
 import PlaidConnectAccount from '@/components/plaid/PlaidConnectAccount';
 import { useUser } from '@/contexts/UserContext';
 import ChangePassword from '@/components/change-password';
+import TwofaSetting from '@/components/twofa-setting';
 
 export default function Setting() {
   const { user, loading } = useAuth();
@@ -105,13 +106,7 @@ export default function Setting() {
                   <CardDescription>Manage your account security</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Lock className="h-4 w-4" />
-                      <span>Two-Factor Authentication</span>
-                    </div>
-                    <Switch id="two-factor" />
-                  </div>
+                  <TwofaSetting></TwofaSetting>
                   <ChangePassword></ChangePassword>
                 </CardContent>
               </Card>

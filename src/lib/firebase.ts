@@ -38,23 +38,24 @@ export const logout = (): Promise<void> => signOut(auth);
 
 export const signInWithGoogle = (): Promise<UserCredential> => signInWithPopup(auth, googleProvider);
 
-export const recoverPassword = (email: string): Promise<void> => 
-  sendPasswordResetEmail(auth, email);
+export const recoverPassword = (email: string): Promise<void> =>  sendPasswordResetEmail(auth, email);
 
   /** Firestore Operations */
-  const saveDocument = async (path: string, data: object) => {
+export const saveDocument = async (path: string, data: object) => {
     try {
       await setDoc(doc(db, path), data);
       console.log(`Document saved to path: ${path}`);
     } catch (error) {
-      console.error(`Error saving document at ${path}:`, error);
+      console.log(`Error saving document at ${path}:`, error);
     }
 };
 
 
 export const saveUserData = async (userId: string, formData: UserData) => {
+
   const data = { ...formData, createdAt: Timestamp.now(), registrationComplete: true };
   await saveDocument(`users/${userId}`, data);
+  
 };
 
 export const getUserData = async (uid: string) => {
@@ -65,11 +66,11 @@ export const getUserData = async (uid: string) => {
     if (userDoc.exists()) {
       return userDoc.data() as UserData;
     } else {
-      console.error('No user data found for UID:', uid);
+      console.log('No user data found for UID:', uid);
       return null;
     }
   } catch (error) {
-    console.error('Error fetching user data:', error);
+    console.log('Error fetching user data:', error);
     return null;
   }
 };
@@ -118,7 +119,7 @@ export const saveLoanApplication = async (data: any) => {
     const querySnapshot = await getDocs(inProgressQuery);
 
     if (!querySnapshot.empty) {
-      console.warn('An application is already in progress.');
+      console.log('An application is already in progress.');
       return null;
     }
 
@@ -134,7 +135,7 @@ export const saveLoanApplication = async (data: any) => {
     console.log('Loan application saved with ID:', docRef.id);
     return { id: docRef.id };
   } catch (error) {
-    console.error("Error saving loan application:", error);
+    console.log("Error saving loan application:", error);
     throw error;
   }
 };
@@ -155,7 +156,7 @@ export const fetchLatestApplication = async () => {
       return null;
     }
   } catch (error) {
-    console.error('Error fetching latest application:', error);
+    console.log('Error fetching latest application:', error);
     throw error;
   }
 };

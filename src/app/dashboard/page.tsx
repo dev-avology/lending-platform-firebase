@@ -23,6 +23,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { UploadDocumentsModal } from '../loan-status/UploadDocumentsModal'
 import AccountsHandler from '@/components/plaid/AccountHandler'
+import { GetFunding } from '@/components/get-funding'
 
 const notifications = [
   { id: 1, message: 'Your loan application has been approved', time: '2 hours ago' },
@@ -353,11 +354,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="mt-8 flex justify-start mb-4">
-            <button className="bg-black text-white px-6 py-3 rounded-md text-lg font-medium">
-              Get Funding
-            </button>
-          </div>
+          <GetFunding></GetFunding>
 
           <div className="mt-4">
 
