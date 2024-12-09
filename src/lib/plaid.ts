@@ -21,7 +21,6 @@ const configuration = new Configuration({
  */
 export const linkItemToken = async (userid: string, clientName: string) => {
   try {
-
   // Get current date
   const currentDate = new Date();
   // Calculate start_date (first day of three months ago)
@@ -70,7 +69,7 @@ export const linkItemToken = async (userid: string, clientName: string) => {
     // Return link token
     return { linkToken: response.data.link_token };
   } catch (error) {
-    console.error('Error creating link token:', error);
+    console.log('Error creating link token:', error);
     throw new Error('Failed to create link token');
   }
 };
@@ -87,7 +86,7 @@ export const exchangePublicToken = async (publicToken: string) => {
       const response = await plaidClient.itemPublicTokenExchange({public_token: publicToken });
       return { accessToken: response.data.access_token, itemId: response.data.item_id };
     } catch (error) {
-      console.error('Error exchanging public token:', error);
+      console.log('Error exchanging public token:', error);
       throw new Error('Failed to exchange public token');
     }
   };
@@ -102,7 +101,7 @@ export const exchangePublicToken = async (publicToken: string) => {
       const response = await plaidClient.accountsGet({ access_token: accessToken });
       return response.data.accounts;
     } catch (error) {
-      console.error('Error fetching accounts:', error);
+      console.log('Error fetching accounts:', error);
       throw new Error('Failed to fetch accounts');
     }
   };
@@ -114,7 +113,7 @@ export const exchangePublicToken = async (publicToken: string) => {
       const response = await plaidClient.statementsList({access_token:accessToken});
       return { accounts: response.data.accounts};
     }catch(error){
-      console.error('Error fetching accounts:', error);
+      console.log('Error fetching accounts:', error);
       throw new Error('Failed to fetch accounts');
     }
   }

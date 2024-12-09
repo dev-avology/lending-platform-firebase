@@ -14,7 +14,7 @@ export function GetFunding() {
       // Fetch the pending application with the given condition
       const currentApplication = await firebaseService.getRecordByCondition(
         `users/${user.uid}/applications`,
-        [["status", "==", "pending"]]
+        [["status", "==", "In Progress"]]
       );
 
       // Set the application ID or null if not found

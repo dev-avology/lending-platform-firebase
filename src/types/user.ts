@@ -26,10 +26,10 @@ export interface Document {
   }
 
 export interface Application {
-    status: string
-    loanAmount: string
-    submissionDate: Timestamp
     id?: string,
+    status: string,
+    loanAmount: string,
+    submissionDate: Timestamp
     legalName: string,
     entityType: string,
     stateInception: string,
@@ -73,6 +73,55 @@ export interface Application {
     ownerZip: string
 }
 
+export const initialApplication: Application = {
+  id: '',
+  status: '',
+  loanAmount: '',
+  submissionDate: Timestamp.now(),
+  legalName: '',
+  entityType: '',
+  stateInception: '',
+  inceptionDate: '',
+  businessPhone: '',
+  federalTaxId: '',
+  physicalAddress: '',
+  city: '',
+  state: '',
+  zipCode: '',
+  businessEmail: '',
+  existingCashAdvances: 'no',
+  advanceBalance: '',
+  fundingCompanies: '',
+  taxLiens: 'no',
+  taxLienPlan: 'no',
+  bankruptcy: 'no',
+  homeBased: 'no',
+  homeOwnership: 'rent',
+  homePayment: '',
+  ownBusinessProperty: 'no',
+  businessPropertyPayment: '',
+  landlordName: '',
+  industryType: '',
+  grossAnnualSales: '',
+  averageMonthlySales: '',
+  lastMonthSales: '',
+  businessBankName: '',
+  creditCardProcessor: '',
+  averageMonthlyCreditCardSales: '',
+  firstName: '',
+  lastName: '',
+  dateOfBirth: '',
+  ssn: '',
+  driversLicense: '',
+  officerTitle: '',
+  ownershipPercentage: '',
+  homeAddress: '',
+  ownerCity: '',
+  ownerState: '',
+  ownerZip: ''
+};
+
+
 export interface Offer {
   lender: string,
   amount: string,
@@ -95,3 +144,5 @@ export interface ConnectedBanks {
   item_id: string;
   status: boolean;
 }
+
+

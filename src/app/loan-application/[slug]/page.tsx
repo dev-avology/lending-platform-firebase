@@ -1,9 +1,10 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @next/next/no-async-client-component */
 /* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client'
 
-import { use } from 'react'
+import { use, useEffect } from 'react'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
@@ -14,41 +15,115 @@ import { toast } from '@/hooks/use-toast'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { CheckCircle2, XCircle, AlertTriangle, FileText, Edit2, Lock } from 'lucide-react'
+import { firebaseService } from '@/lib/firebaseService'
+import { useAuth } from '@/contexts/AuthContext'
+import { Application, initialApplication } from '@/types/user'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { DashboardBack } from '@/components/dashboard-back'
+
+
+interface FieldProps {
+    id: string;
+    label: string;
+    type?: string;
+    value: string;
+    error?: string;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    readOnly?: boolean; // Corrected prop name
+}
+
+const Field: React.FC<FieldProps> = ({
+    id,
+    label,
+    type = 'text',
+    value,
+    error,
+    onChange,
+    readOnly = false, // Default value corrected
+}) => (
+    <div>
+        <Label htmlFor={id}>{label}</Label>
+        <Input
+            id={id}
+            name={id}
+            type={type}
+            value={value}
+            onChange={onChange}
+            aria-invalid={!!error}
+            aria-describedby={`${id}-error`}
+            readOnly={readOnly} // Used corrected prop here
+        />
+        {error && (
+            <p id={`${id}-error`} className="text-red-500 text-sm mt-1">
+                {error}
+            </p>
+        )}
+    </div>
+);
+
+interface RadioOption {
+    value: string;
+    label: string;
+}
+
+const renderRadioGroup = (
+    label: string,
+    name: string,
+    options: RadioOption[],
+    defaultValue: string, // Renamed to avoid conflict with reserved keyword
+    readOnly?: boolean // Corrected prop name
+): JSX.Element => (
+    <div>
+        <Label>{label}</Label>
+        <RadioGroup defaultValue={defaultValue} className="flex space-x-4" disabled={readOnly}>
+            {options.map(({ value, label }) => (
+                <div key={value} className="flex items-center space-x-2">
+                    <RadioGroupItem value={value} id={`${name}${value}`} />
+                    <Label htmlFor={`${name}${value}`}>{label}</Label>
+                </div>
+            ))}
+        </RadioGroup>
+    </div>
+);
+
 
 export default function Page({ params }: { params: Promise<{ slug: string }> }) {
 
     const router = useRouter()
     const [isEditing, setIsEditing] = useState(false)
     const [isConfirmed, setIsConfirmed] = useState(false)
+    const { user } = useAuth();
 
     const unwrappedParams = use(params) // Unwrap the Promise
     const slug = unwrappedParams.slug
 
-    const [application, setApplication] = useState({
-        id: 'slug',
-        businessName: 'TechStart Solutions',
-        applicantName: 'John Doe',
-        loanAmount: 100000,
-        loanPurpose: 'Equipment Purchase',
-        creditScore: 720,
-        annualRevenue: 500000,
-        yearsInBusiness: 3,
-        ssn: '123-45-6789',
-        ein: '12-3456789',
-        documents: [
-            { name: 'Business Tax Returns', status: 'submitted' },
-            { name: 'Personal Tax Returns', status: 'submitted' },
-            { name: 'Bank Statements', status: 'submitted' },
-            { name: 'Financial Projections', status: 'pending' },
-            { name: 'Business Plan', status: 'not_required' },
-        ],
-        riskAssessment: {
-            creditRisk: 'Low',
-            businessStability: 'Medium',
-            marketConditions: 'Favorable',
-            overallRisk: 'Low to Medium',
-        },
-    })
+    const [application, setApplication] = useState<Application>(initialApplication)
+
+
+
+    const fetchApplication = async () => {
+        if (!user) return;
+
+        try {
+            // Fetch the pending application with the given condition
+            const currentApplication = await firebaseService.getRecord(`users/${user.uid}/applications`, slug);
+
+            // Set the application ID or null if not found
+            if (currentApplication)
+                setApplication(currentApplication);
+
+            console.log(currentApplication);
+
+        } catch (error) {
+            console.error("Error fetching the current application:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchApplication();
+    }, [slug, user]);
+
 
     const handleEdit = () => {
         setIsEditing(true)
@@ -105,106 +180,101 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                         </CardHeader>
                         <CardContent>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                                <Field id="businessName" label="Business Name" value={application.legalName} onChange={handleInputChange} readOnly={!isEditing} />
+
                                 <div>
-                                    <Label htmlFor="businessName">Business Name</Label>
-                                    <Input
-                                        id="businessName"
-                                        name="businessName"
-                                        value={application.businessName}
-                                        onChange={handleInputChange}
-                                        readOnly={!isEditing}
-                                    />
+                                    <Label htmlFor="entityType">Legal Entity Type</Label>
+                                    <Select name="entityType" value={application.entityType} disabled={!isEditing}>
+                                        <SelectTrigger id="entityType">
+                                            <SelectValue placeholder="Select entity type" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="llc">LLC</SelectItem>
+                                            <SelectItem value="corporation">Corporation</SelectItem>
+                                            <SelectItem value="partnership">Partnership</SelectItem>
+                                            <SelectItem value="soleProprietorship">Sole Proprietorship</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
+
+                                <Field id="stateInception" label="State of Inception" value={application.stateInception} onChange={handleInputChange} readOnly={!isEditing} />
+                                <Field id="inceptionDate" type="date" label="Business Inception Date" value={application.inceptionDate} onChange={handleInputChange} readOnly={!isEditing} />
+                                <Field id="federalTaxId" label="Federal Tax ID" value={application.federalTaxId} onChange={handleInputChange} readOnly={!isEditing} />
+                                <Field id="businessPhone" label="Business Phone" value={application.businessPhone} onChange={handleInputChange} />
+                                <Field id="physicalAddress" label="Physical Address" value={application.physicalAddress} onChange={handleInputChange} readOnly={!isEditing} />
+
+                                <Field id="city" label="City" value={application.city} onChange={handleInputChange} readOnly={!isEditing} />
+                                <Field id="state" label="State" value={application.state} onChange={handleInputChange} readOnly={!isEditing} />
+                                <Field id="zipCode" label="Zip Code" value={application.zipCode} onChange={handleInputChange} readOnly={!isEditing} />
+                                <Field id="businessEmail" label="Business Email" value={application.businessEmail} onChange={handleInputChange} readOnly={!isEditing} />
+
+                                {renderRadioGroup('Any Existing Cash Advances?', 'existingCashAdvances', [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' },], application.existingCashAdvances, !isEditing)}
+
+                                {application.existingCashAdvances === 'yes' && <>
+
+                                    <Field id="advanceBalance" label="Balance of Current Advances" value={application.advanceBalance} onChange={handleInputChange} readOnly={!isEditing} />
+                                    <Field id="fundingCompanies" label="Funding Companies" value={application.fundingCompanies} onChange={handleInputChange} readOnly={!isEditing} />
+                                </>
+                                }
+
+                                {renderRadioGroup('Business Tax Liens?', 'taxLiens', [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' },], application.taxLiens, !isEditing)}
+
+
+                                {renderRadioGroup('Tax Lien Payment Plan?', 'taxLienPlan', [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' },], application.taxLienPlan, !isEditing)}
+
+                                {renderRadioGroup('Filed for Bankruptcy Within Last 2 Years?', 'bankruptcy', [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' },], application.bankruptcy, !isEditing)}
+
+
+                                {renderRadioGroup('Business Home Based?', 'homeBased', [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' },], application.homeBased, !isEditing)}
+
+                                {renderRadioGroup('Rent or Own Home?', 'homeOwnership', [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' },], application.homeOwnership, !isEditing)}
+
+                                <Field
+                                    id="homePayment"
+                                    label="Home Monthly Payment"
+                                    value={application.homePayment}
+                                    onChange={handleInputChange}
+                                    readOnly={!isEditing}
+                                />
+
+
+                                {renderRadioGroup('Own Business Property?', 'ownBusinessProperty', [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' },], application.ownBusinessProperty, !isEditing)}
+
+                                <Field
+                                    id="businessPropertyPayment"
+                                    label="Business Property Monthly Payment"
+                                    value={application.businessPropertyPayment}
+                                    onChange={handleInputChange}
+                                    readOnly={!isEditing}
+                                />
+
+                                <Field
+                                    id="landlordName"
+                                    label="Landlord Name"
+                                    value={application.landlordName}
+                                    onChange={handleInputChange}
+                                    readOnly={!isEditing}
+                                />
+
                                 <div>
-                                    <Label htmlFor="applicantName">Applicant Name</Label>
-                                    <Input
-                                        id="applicantName"
-                                        name="applicantName"
-                                        value={application.applicantName}
-                                        onChange={handleInputChange}
-                                        readOnly={!isEditing}
-                                    />
+                                    <Label htmlFor="industryType">Industry Type</Label>
+                                    <Select name="industryType" value={application.industryType} disabled={!isEditing}>
+                                        <SelectTrigger id="industryType">
+                                            <SelectValue placeholder="Select industry type" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="retail">Retail</SelectItem>
+                                            <SelectItem value="technology">Technology</SelectItem>
+                                            <SelectItem value="manufacturing">Manufacturing</SelectItem>
+                                            <SelectItem value="services">Services</SelectItem>
+                                            <SelectItem value="other">Other</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
-                                <div>
-                                    <Label htmlFor="loanAmount">Loan Amount</Label>
-                                    <Input
-                                        id="loanAmount"
-                                        name="loanAmount"
-                                        value={application.loanAmount}
-                                        onChange={handleInputChange}
-                                        readOnly={!isEditing}
-                                        type="number"
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="loanPurpose">Loan Purpose</Label>
-                                    <Input
-                                        id="loanPurpose"
-                                        name="loanPurpose"
-                                        value={application.loanPurpose}
-                                        onChange={handleInputChange}
-                                        readOnly={!isEditing}
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="creditScore">Credit Score</Label>
-                                    <Input
-                                        id="creditScore"
-                                        name="creditScore"
-                                        value={application.creditScore}
-                                        onChange={handleInputChange}
-                                        readOnly={!isEditing}
-                                        type="number"
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="annualRevenue">Annual Revenue</Label>
-                                    <Input
-                                        id="annualRevenue"
-                                        name="annualRevenue"
-                                        value={application.annualRevenue}
-                                        onChange={handleInputChange}
-                                        readOnly={!isEditing}
-                                        type="number"
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="yearsInBusiness">Years in Business</Label>
-                                    <Input
-                                        id="yearsInBusiness"
-                                        name="yearsInBusiness"
-                                        value={application.yearsInBusiness}
-                                        onChange={handleInputChange}
-                                        readOnly={!isEditing}
-                                        type="number"
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="ssn">SSN</Label>
-                                    <div className="relative">
-                                        <Input
-                                            id="ssn"
-                                            name="ssn"
-                                            value={application.ssn}
-                                            readOnly
-                                        />
-                                        <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                                    </div>
-                                    <p className="text-sm text-muted-foreground mt-1">Contact support to update SSN</p>
-                                </div>
-                                <div>
-                                    <Label htmlFor="ein">EIN</Label>
-                                    <div className="relative">
-                                        <Input
-                                            id="ein"
-                                            name="ein"
-                                            value={application.ein}
-                                            readOnly
-                                        />
-                                        <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                                    </div>
-                                    <p className="text-sm text-muted-foreground mt-1">Contact support to update EIN</p>
-                                </div>
+
+
+
                             </div>
                         </CardContent>
                         <CardFooter className="flex justify-between">
@@ -227,7 +297,7 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                         </CardFooter>
                     </Card>
 
-                    <Tabs defaultValue="documents">
+                    {/* <Tabs defaultValue="documents">
                         <TabsList className="grid w-full grid-cols-2">
                             <TabsTrigger value="documents">Required Documents</TabsTrigger>
                             <TabsTrigger value="risk">Risk Assessment</TabsTrigger>
@@ -290,7 +360,7 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                                 </CardContent>
                             </Card>
                         </TabsContent>
-                    </Tabs>
+                    </Tabs> */}
 
                     {isConfirmed && (
                         <Card>
@@ -303,6 +373,7 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                         </Card>
                     )}
                 </div>
+                <DashboardBack />
             </main>
         </div>
     )
