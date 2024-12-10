@@ -25,7 +25,6 @@ export default function LoanApplication() {
     const [errors, setErrors] = useState<Partial<Record<keyof Application, string>>>({});
 
 
-
     const [currentStep, setCurrentStep] = useState<keyof StepFields>(0);    
 
 
@@ -98,6 +97,7 @@ export default function LoanApplication() {
     }, [loading, user, router]);
 
     if (loading) return <div>Loading...</div>;
+
     if (!user) return null;
 
     const validateField = (name: keyof Application, value: string) => {
@@ -296,7 +296,7 @@ export default function LoanApplication() {
                 return (
                     <CompanyInformation
                         formData={formData as Pick<Application, StepFields[0]>}
-                        handleInputChange={handleInputChange} handleSelectChange={handleSelectChange} handleRadioChange={handleRadioChange} validateField={validateField} errors={errors}
+                        handleInputChange={handleInputChange} handleSelectChange={handleSelectChange} handleRadioChange={handleRadioChange} validateField={validateField} errors={errors} isEditing={false} isNew={true}
                     />
                 );
             case 1:
@@ -304,7 +304,7 @@ export default function LoanApplication() {
                     <FinancialInformation
                         formData={formData as Pick<Application, StepFields[1]>}
                         handleInputChange={handleInputChange}
-                        errors={errors}
+                        errors={errors} isEditing={false} isNew={true}
                     />
                 );
             case 2:
@@ -312,7 +312,7 @@ export default function LoanApplication() {
                     <OwnerInformation
                         formData={formData as Pick<Application, StepFields[2]>}
                         handleInputChange={handleInputChange}
-                        errors={errors}
+                        errors={errors} isEditing={false} isNew={true}
                     />
                 );
             default:

@@ -22,8 +22,20 @@ export interface UserData {
 
 export interface Document {
     name: string;
-    status: 'pending' | 'uploaded';
+    status: DocumentStatus;
+    progress?: number;
   }
+
+export const initialDocuments: Document[] = [
+    { name: "Business Tax Returns", status: "pending" },
+    { name: "Personal Tax Returns", status: "pending" },
+    { name: "Bank Statements", status: "pending" },
+    { name: "Financial Projections", status: "pending" },
+    { name: "Business Plan", status: "not_required" }
+  ]
+
+export type DocumentStatus = 'pending' | 'uploading' | 'submitted' | 'uploaded' | 'not_required' | 'error'
+
 
 export interface Application {
     id?: string,

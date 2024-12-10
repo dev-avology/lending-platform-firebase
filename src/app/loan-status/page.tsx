@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { UploadDocumentsModal } from './UploadDocumentsModal'
+import { UploadDocumentsModal } from '../../components/UploadDocumentsModal'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -185,7 +185,6 @@ export default function LoanStatus() {
 
     const anyPending = updatedDocuments.some((doc) => doc.status === 'pending');
     setHasPendingDocuments(anyPending);
-
   }
 
   return (

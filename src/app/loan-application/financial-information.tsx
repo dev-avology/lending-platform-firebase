@@ -17,6 +17,8 @@ interface FinancialInformationProps {
   >;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   errors: { [key: string]: string };
+  isEditing:boolean;
+  isNew :boolean;
 }
 
 interface FieldProps {
@@ -27,9 +29,10 @@ interface FieldProps {
   value: string;
   error?: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  readonly:boolean;
 }
 
-const Field: React.FC<FieldProps> = ({ id, label, type = 'text', placeholder, value, error, onChange }) => (
+const Field: React.FC<FieldProps> = ({ id, label, type = 'text', placeholder, value, error, onChange, readonly = false }) => (
   <div>
     <Label htmlFor={id}>{label}</Label>
     <Input
@@ -41,6 +44,7 @@ const Field: React.FC<FieldProps> = ({ id, label, type = 'text', placeholder, va
       onChange={onChange}
       aria-invalid={!!error}
       aria-describedby={`${id}-error`}
+      readOnly={readonly}
     />
     {error && <p id={`${id}-error`} className="text-red-500 text-sm mt-1">{error}</p>}
   </div>
@@ -50,6 +54,8 @@ export function FinancialInformation({
   formData,
   handleInputChange,
   errors,
+  isEditing=false,
+  isNew =false,
 }: FinancialInformationProps) {
   return (
     <Card>
@@ -58,7 +64,7 @@ export function FinancialInformation({
           <DollarSign className="inline-block w-6 h-6 mr-2" />
           Business Financial Information
         </CardTitle>
-        <CardDescription>Provide financial details about your business</CardDescription>
+        <CardDescription>{(isNew)?`Provide financial details about your business`:`Financial details about your business`}</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-6">
         <Field
@@ -69,6 +75,7 @@ export function FinancialInformation({
           value={formData.grossAnnualSales}
           error={errors.grossAnnualSales}
           onChange={handleInputChange}
+          readonly={isEditing}
         />
         <Field
           id="averageMonthlySales"
@@ -78,6 +85,7 @@ export function FinancialInformation({
           value={formData.averageMonthlySales}
           error={errors.averageMonthlySales}
           onChange={handleInputChange}
+          readonly={isEditing}
         />
         <Field
           id="lastMonthSales"
@@ -87,6 +95,7 @@ export function FinancialInformation({
           value={formData.lastMonthSales}
           error={errors.lastMonthSales}
           onChange={handleInputChange}
+          readonly={isEditing}
         />
         <Field
           id="businessBankName"
@@ -94,6 +103,7 @@ export function FinancialInformation({
           value={formData.businessBankName}
           error={errors.businessBankName}
           onChange={handleInputChange}
+          readonly={isEditing}
         />
         <Field
           id="creditCardProcessor"
@@ -101,6 +111,7 @@ export function FinancialInformation({
           value={formData.creditCardProcessor}
           error={errors.creditCardProcessor}
           onChange={handleInputChange}
+          readonly={isEditing}
         />
         <Field
           id="averageMonthlyCreditCardSales"
@@ -110,6 +121,7 @@ export function FinancialInformation({
           value={formData.averageMonthlyCreditCardSales}
           error={errors.averageMonthlyCreditCardSales}
           onChange={handleInputChange}
+          readonly={isEditing}
         />
       </CardContent>
     </Card>

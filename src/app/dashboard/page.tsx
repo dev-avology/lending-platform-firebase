@@ -21,7 +21,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { UploadDocumentsModal } from '../loan-status/UploadDocumentsModal'
+import { UploadDocumentsModal } from '../../components/UploadDocumentsModal'
 import AccountsHandler from '@/components/plaid/AccountHandler'
 import { GetFunding } from '@/components/get-funding'
 
