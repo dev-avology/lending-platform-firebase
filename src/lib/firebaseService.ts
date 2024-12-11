@@ -17,6 +17,7 @@ import {
   Query,
   WhereFilterOp,
 } from 'firebase/firestore';
+import { getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -209,4 +210,28 @@ export const firebaseService = {
       throw new Error('Failed to create documents in bulk');
     }
   },
+
+/**
+ * Uploads a file to Firebase Storage and retrieves its download URL.
+ * @param fileBytes - The file data as Uint8Array or ArrayBuffer.
+ * @param fileName - The name of the file to be uploaded (including path).
+ * @returns A Promise that resolves to the download URL of the uploaded file.
+ */
+ uploadToFirebaseStorage: async (storagePath: string, fileBytes: Uint8Array | ArrayBuffer): Promise<string> => {
+
+  const storage = getStorage(); // Initialize Firebase Storage
+  const fileRef = ref(storage, storagePath); // Reference to the file path in storage
+
+  try {
+      // Upload the file bytes with a specified content type
+      await uploadBytes(fileRef, fileBytes, { contentType: 'application/pdf' });
+      console.log("File uploaded successfully!");
+
+      // Get and return the download URL of the uploaded file
+      return await getDownloadURL(fileRef);
+  } catch (error) {
+      console.error("Error uploading file to Firebase:", error);
+      throw error; // Re-throw the error to be handled by the caller
+  }
+},
 };

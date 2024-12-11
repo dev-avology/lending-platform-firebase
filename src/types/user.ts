@@ -1,4 +1,3 @@
-
 import { Timestamp } from 'firebase/firestore';
 
 export interface UserData {
@@ -19,22 +18,21 @@ export interface UserData {
     createdAt: Timestamp | null
   }
 
+export type DocumentStatus = 'pending' | 'uploading' | 'submitted' | 'uploaded' | 'not_required' | 'error'
 
 export interface Document {
     name: string;
     status: DocumentStatus;
     progress?: number;
+    downloadUrl?: string;
   }
 
 export const initialDocuments: Document[] = [
-    { name: "Business Tax Returns", status: "pending" },
-    { name: "Personal Tax Returns", status: "pending" },
-    { name: "Bank Statements", status: "pending" },
-    { name: "Financial Projections", status: "pending" },
-    { name: "Business Plan", status: "not_required" }
+  { name: 'Banking Statements ', status: 'pending' },
+  { name: 'Tax Returns', status: 'pending' },
+  { name: 'Profit & Loss Statement', status: 'pending' },
+  { name: 'Balance Sheet', status: 'pending' },
   ]
-
-export type DocumentStatus = 'pending' | 'uploading' | 'submitted' | 'uploaded' | 'not_required' | 'error'
 
 
 export interface Application {

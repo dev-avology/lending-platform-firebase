@@ -81,6 +81,7 @@ export function CompanyInformation({
     isEditing=false,
     isNew = false,
 }: CompanyInformationProps) {
+
     const handleAdvanceBalanceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         handleInputChange(e);
         if (formData.existingCashAdvances === 'yes') {
@@ -89,14 +90,14 @@ export function CompanyInformation({
     };
 
     // Utility function to render errors
-    const renderError = (fieldName: string) =>
-        errors[fieldName] && <p className="text-red-500 text-sm mt-1">{errors[fieldName]}</p>;
+    const renderError = (fieldName: string) => errors[fieldName] && <p className="text-red-500 text-sm mt-1">{errors[fieldName]}</p>;
 
     // Helper to render Radio Groups
     const renderRadioGroup = (
         label: string,
         name: keyof typeof formData,
         options: { value: string; label: string }[],
+        defaultValue:string,
         isEditing: boolean
     ) => (
         <div>
@@ -116,6 +117,8 @@ export function CompanyInformation({
             </RadioGroup>
         </div>
     );
+
+    //console.log(formData,'ggggggggggggggggggggggggg');
 
     return (
         <Card>
@@ -253,7 +256,7 @@ export function CompanyInformation({
                 {renderRadioGroup('Any Existing Cash Advances?', 'existingCashAdvances', [
                     { value: 'yes', label: 'Yes' },
                     { value: 'no', label: 'No' },
-                ], isEditing)}
+                ], formData.existingCashAdvances, isEditing)}
 
                 {formData.existingCashAdvances === 'yes' && <>
 
@@ -285,29 +288,29 @@ export function CompanyInformation({
                     { value: 'yes', label: 'Yes' },
                     { value: 'no', label: 'No' },
                     
-                ],isEditing)}
+                ], formData.taxLiens, isEditing)}
 
 
                 {renderRadioGroup('Tax Lien Payment Plan?', 'taxLienPlan', [
                     { value: 'yes', label: 'Yes' },
                     { value: 'no', label: 'No' },
-                ],isEditing)}
+                ], formData.taxLienPlan, isEditing)}
 
                 {renderRadioGroup('Filed for Bankruptcy Within Last 2 Years?', 'bankruptcy', [
                     { value: 'yes', label: 'Yes' },
                     { value: 'no', label: 'No' },
-                ],isEditing)}
+                ], formData.bankruptcy, isEditing)}
 
 
                 {renderRadioGroup('Business Home Based?', 'homeBased', [
                     { value: 'yes', label: 'Yes' },
                     { value: 'no', label: 'No' },
-                ],isEditing)}
+                ], formData.homeBased, isEditing)}
 
                 {renderRadioGroup('Rent or Own Home?', 'homeOwnership', [
                     { value: 'yes', label: 'Yes' },
                     { value: 'no', label: 'No' },
-                ],isEditing)}
+                ], formData.homeOwnership, isEditing)}
 
                 <Field
                     id="homePayment"
@@ -323,7 +326,7 @@ export function CompanyInformation({
                 {renderRadioGroup('Own Business Property?', 'ownBusinessProperty', [
                     { value: 'yes', label: 'Yes' },
                     { value: 'no', label: 'No' },
-                ],isEditing)}
+                ], formData.ownBusinessProperty, isEditing)}
 
                 <Field
                     id="businessPropertyPayment"

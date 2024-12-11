@@ -111,7 +111,21 @@ export const exchangePublicToken = async (publicToken: string) => {
   export const getStatementList = async (accessToken: string) => {
     try{
       const response = await plaidClient.statementsList({access_token:accessToken});
+      console.log(response);
+      
       return { accounts: response.data.accounts};
+    }catch(error){
+      console.log('Error fetching accounts:', error);
+      throw new Error('Failed to fetch accounts');
+    }
+  }
+
+
+  export const getStatement = async (accessToken: string, statement: string) => {
+    try{
+      //const response = await plaidClient.statementsList({access_token:accessToken});
+      const response = await plaidClient.statementsDownload({access_token: accessToken,statement_id: statement})
+      return response.data;
     }catch(error){
       console.log('Error fetching accounts:', error);
       throw new Error('Failed to fetch accounts');

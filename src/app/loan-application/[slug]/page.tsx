@@ -9,25 +9,17 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { toast } from '@/hooks/use-toast'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { CheckCircle2, XCircle, AlertTriangle, FileText, Edit2, Lock, ChevronLeft, ChevronRight, Upload, Clock, HelpCircle, X } from 'lucide-react'
+import {  Edit2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { firebaseService } from '@/lib/firebaseService'
 import { useAuth } from '@/contexts/AuthContext'
-import { Application, initialApplication, initialDocuments, Document, DocumentStatus } from '@/types/user'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Application, initialApplication, initialDocuments, Document } from '@/types/user'
 import { DashboardBack } from '@/components/dashboard-back'
 import { CompanyInformation } from '../company-information'
 import { FinancialInformation } from '../financial-information'
 import { OwnerInformation } from '../owner-information'
 import { Timestamp } from 'firebase/firestore'
-import { Progress } from '@/components/ui/progress'
-import { getDownloadURL, getStorage, ref } from 'firebase/storage'
-
+import { RequiredDocuments } from '@/components/requiredDocuments'
 
 export default function Page({ params }: { params: Promise<{ slug: string }> }) {
 
@@ -54,9 +46,12 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
 
     const [formData, setFormData] = useState<Partial<Application>>(initialApplication);
 
-    const [requiredDocuments, setRequiredDocuments] = useState<Document[]>(initialDocuments);
+    const [loadingApplication, setLoadingApplication] = useState(true);
+
 
     const [hasPendingDocuments, setHasPendingDocuments] = useState(true);
+
+    const [refreshKey, setRefreshKey] = useState(0);
 
     const requiredFields: Record<number, (keyof Application)[]> = {
         0: ['legalName', 'entityType', 'stateInception', 'inceptionDate', 'federalTaxId', 'businessPhone', 'physicalAddress', 'city', 'state', 'zipCode', 'businessEmail', 'existingCashAdvances', 'advanceBalance', 'fundingCompanies', 'taxLiens', 'taxLienPlan', 'bankruptcy', 'homeBased', 'homeOwnership', 'homePayment', 'ownBusinessProperty', 'businessPropertyPayment', 'landlordName', 'industryType'],
@@ -64,6 +59,9 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
         2: ['firstName', 'lastName', 'dateOfBirth', 'ssn', 'driversLicense', 'officerTitle', 'ownershipPercentage', 'homeAddress', 'ownerCity', 'ownerState', 'ownerZip'],
     };
 
+    const updateDocumentStatus = (newValue: boolean) => {
+        setHasPendingDocuments(newValue);
+      };
 
     const fetchApplication = async () => {
         if (!user) return;
@@ -73,48 +71,26 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
             const currentApplication = await firebaseService.getRecord(`users/${user.uid}/applications`, slug);
 
             // Set the application ID or null if not found
-            if (currentApplication)
+            if (currentApplication){
                 setFormData(currentApplication);
+               setRefreshKey((prevKey) => prevKey + 1);
 
-            console.log(currentApplication);
+                setLoadingApplication(false);
+             }
 
         } catch (error) {
             console.error("Error fetching the current application:", error);
         }
     };
 
-    const checkExistingFiles = async () => {
-        if (!user) return;
-
-        const storage = getStorage()
-
-        const updatedDocuments: Document[] = await Promise.all(
-            requiredDocuments.map(async (doc): Promise<Document> => {
-                const fileRef = ref(storage, `user_files/${user.uid}/${doc.name}`)
-                try {
-                    await getDownloadURL(fileRef)
-                    return { ...doc, status: 'uploaded' }
-                } catch {
-                    // File does not exist
-                    return { ...doc, status: 'pending' }
-                }
-            })
-        )
-        setRequiredDocuments(updatedDocuments)
-
-        const anyPending = updatedDocuments.some((doc) => doc.status === 'pending');
-        setHasPendingDocuments(anyPending);
-    }
-
     useEffect(() => {
         if (!loading && !user) {
             router.push('/login');
         }
         fetchApplication()
-        checkExistingFiles()
     }, [loading, user, router]);
 
-    if (loading) return <div>Loading...</div>;
+    if (loading && loadingApplication) return <div>Loading...</div>;
 
     if (!user) return null;
 
@@ -348,8 +324,12 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
         setIsEditing(true)
     }
 
-    const handleSave = () => {
+    const handleSave = async () => {
+
+        try{
+
         setIsEditing(false)
+        console.log(formData);
 
         const application = {
             ...formData,
@@ -359,19 +339,30 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
             loanAmount: formData.grossAnnualSales ? parseFloat(formData.grossAnnualSales) * 0.1 : 0,
         };
 
-        if (formData.id)
-            firebaseService.update(`users/${user.uid}/applications`, formData.id, application);
+        if (formData.id){
+            
+            console.log(application);
+
+            await firebaseService.update(`users/${user.uid}/applications`, formData.id, application);
+        }
 
         toast({
             title: "Changes Saved",
             description: "Your application has been updated.",
         })
+    }catch{
+        toast({
+            title: "Oopss",
+            description: `Try Again Later`,
+            variant: "destructive",
+        })
+    }
 
     }
 
     const handleConfirm = () => {
 
-        if(hasPendingDocuments){
+        if (hasPendingDocuments) {
             toast({
                 title: "Required Documents",
                 description: `Upload All required documents`,
@@ -399,88 +390,8 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
         })
     }
 
-
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case "complete":
-                return <CheckCircle2 className="w-5 h-5 text-green-500" />
-            case "current":
-                return <Clock className="w-5 h-5 text-blue-500" />
-            case "upcoming":
-                return <HelpCircle className="w-5 h-5 text-gray-300" />
-            default:
-                return <AlertTriangle className="w-5 h-5 text-yellow-500" />
-        }
-    }
-
-    const getDocumentStatusIcon = (status: DocumentStatus) => {
-        switch (status) {
-            case "submitted":
-                return <CheckCircle2 className="w-5 h-5 text-green-500" />
-            case "pending":
-                return <Clock className="w-5 h-5 text-yellow-500" />
-            case "uploading":
-                return <Upload className="w-5 h-5 text-blue-500" />
-            case "not_required":
-                return <HelpCircle className="w-5 h-5 text-gray-300" />
-            case "error":
-                return <X className="w-5 h-5 text-red-500" />
-            default:
-                return <AlertTriangle className="w-5 h-5 text-red-500" />
-        }
-    }
-
-
-    const handleFileUpload = async (documentName: string, file: File) => {
-
-        setRequiredDocuments(docs =>
-            docs.map(doc =>
-                doc.name === documentName ? { ...doc, status: 'uploading', progress: 0 } : doc
-            )
-        )
-
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('documentName', documentName)
-
-        try {
-            const response = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Document-Name': documentName,
-                },
-            })
-
-            if (!response.ok) throw new Error('Upload failed')
-
-            setRequiredDocuments(docs =>
-                docs.map(doc =>
-                    doc.name === documentName ? { ...doc, status: 'submitted', progress: undefined } : doc
-                )
-            )
-
-            toast({
-                title: "Document Uploaded",
-                description: `${documentName} has been successfully uploaded.`,
-            })
-        } catch (error) {
-            console.error('Upload error:', error)
-            setRequiredDocuments(docs =>
-                docs.map(doc =>
-                    doc.name === documentName ? { ...doc, status: 'error', progress: undefined } : doc
-                )
-            )
-            toast({
-                title: "Upload Failed",
-                description: `Failed to upload ${documentName}. Please try again.`,
-                variant: "destructive",
-            })
-        }
-    }
-
     return (
-        <div className="min-h-screen bg-gray-100">
+        <div className="min-h-screen bg-gray-100" key={refreshKey}>
             <nav className="bg-white shadow-md">
                 {/* Navigation bar code (same as in Dashboard.tsx) */}
             </nav>
@@ -535,143 +446,7 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                         </CardFooter>
                     </Card>
 
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Required Documents</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Document</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead>Action</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {requiredDocuments.map((doc, index) => (
-                                        <TableRow key={index}>
-                                            <TableCell>{doc.name}</TableCell>
-                                            <TableCell>
-                                                <div className="flex items-center">
-                                                    {getDocumentStatusIcon(doc.status)}
-                                                    <span className="ml-2 capitalize">{doc.status}</span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                {doc.status === 'pending' && (
-                                                    <div className="flex items-center">
-                                                        <Input
-                                                            type="file"
-                                                            id={`file-${index}`}
-                                                            className="sr-only"
-                                                            onChange={(e) => {
-                                                                const file = e.target.files?.[0]
-                                                                if (file) handleFileUpload(doc.name, file)
-                                                            }}
-                                                        />
-                                                        <Label
-                                                            htmlFor={`file-${index}`}
-                                                            className="cursor-pointer inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
-                                                        >
-                                                            <Upload className="w-4 h-4 mr-2" />
-                                                            Upload
-                                                        </Label>
-                                                    </div>
-                                                )}
-                                                {doc.status === 'uploading' && (
-                                                    <div className="w-full">
-                                                        <Progress value={doc.progress} className="w-full" />
-                                                    </div>
-                                                )}
-                                                {doc.status === 'error' && (
-                                                    <Button
-                                                        variant="destructive"
-                                                        size="sm"
-                                                        onClick={() => setRequiredDocuments(docs =>
-                                                            docs.map(d => d.name === doc.name ? { ...d, status: 'pending' } : d)
-                                                        )}
-                                                    >
-                                                        Retry
-                                                    </Button>
-                                                )}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </Card>
-
-                    {/* <Card>
-        <CardHeader>
-          <CardTitle>Required Documents</CardTitle>
-          <CardDescription>Please submit the following documents to complete your application</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Document</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {requiredDocuments.map((doc, index) => (
-                <TableRow key={index}>
-                  <TableCell>{doc.name}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      {getDocumentStatusIcon(doc.status)}
-                      <span className="ml-2 capitalize">{doc.status.replace('_', ' ')}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {doc.status === 'pending' && (
-                      <div className="flex items-center">
-                        <Input
-                          type="file"
-                          id={`file-${index}`}
-                          className="sr-only"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0]
-                            if (file) handleFileUpload(doc.name, file)
-                          }}
-                        />
-                        <Label
-                          htmlFor={`file-${index}`}
-                          className="cursor-pointer inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
-                        >
-                          <Upload className="w-4 h-4 mr-2" />
-                          Upload
-                        </Label>
-                      </div>
-                    )}
-                    {doc.status === 'uploading' && (
-                      <div className="w-full">
-                        <Progress value={doc.progress} className="w-full" />
-                      </div>
-                    )}
-                    {doc.status === 'error' && (
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => setRequiredDocuments(docs =>
-                          docs.map(d => d.name === doc.name ? { ...d, status: 'pending' } : d)
-                        )}
-                      >
-                        Retry
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card> */}
-
+                    <RequiredDocuments onUpdate={updateDocumentStatus}></RequiredDocuments>
 
                     {isConfirmed && (
                         <Card>
